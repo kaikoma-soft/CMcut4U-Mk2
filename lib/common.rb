@@ -199,7 +199,6 @@ end
 #  dir の直下の mp4 ファイルを削除する。
 #
 def delmp4( dir )
-  pp dir
   if dir != nil and test( ?d, dir )
     Dir.entries( dir ).sort.each do |f|
       if f =~ /\.mp4$/

@@ -123,8 +123,8 @@ class ParaGUI
     
     # 値をセット
     if dir != nil
-      pp path = sprintf("%s/%s/para.yaml",$opt.indir, dir )
-      pp @fpara = ParaFile.new.readPara( fn: path, subdir: dir )
+      path = sprintf("%s/%s/para.yaml",$opt.indir, dir )
+      @fpara = ParaFile.new.readPara( fn: path, subdir: dir )
 
       if @fpara != nil
         @fpara.logofn.delete(nil)
