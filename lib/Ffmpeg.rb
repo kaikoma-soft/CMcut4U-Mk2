@@ -84,7 +84,6 @@ class Ffmpeg
         end
       end
     end
-    log.close if log != nil
 
     if r[:duration] != nil
       if r[:duration] =~ /(\d):(\d+):([\d\.]+)/
@@ -97,7 +96,61 @@ class Ffmpeg
         raise "#{key.to_s} is nil #{@tsfn}"
       end
     end
-    r
+
+    #
+    #   TS の場合、誤検出を避ける為に前番組の部分を skip して再度 ffprobe
+    #
+    require "open3"
+
+    r[ :AudioStream ] = []
+    if @tsfn =~ /\.ts$/
+      if ( size = File.size( @tsfn )) != nil
+        log.puts( "\n\n" + "-" * 20 + "\n\n") if log != nil
+        cmd = %w( ffprobe - )
+        bsize = 1024 * 1024 
+        outbuf = "x" * bsize
+        pid = nil
+        Open3.popen3( *cmd ) do |stdin, stdout, stderr, th|
+          pid = Thread.fork do
+            File.open( @tsfn, "r" ) do |fp|
+              begin
+                fp.seek( size / 10 ) 
+                while ( line = fp.read( bsize, outbuf ) ) != nil
+                  stdin.write( line )
+                end
+              rescue Errno::EPIPE, IOError
+              rescue => e
+                p $!
+                e.backtrace.each {|s| puts s }
+              end
+              stdin.close    # または close_write
+            end
+          end
+
+          begin
+            while ( stdout.eof? == false or stderr.eof? == false )
+              IO.select([stderr, stdout]).flatten.compact.each do |io|
+                io.each_line do |line|
+                  line.force_encoding("ASCII-8BIT")
+                  if line =~/Stream \#0:(\d+)\[.*?\]: Audio/
+                    r[ :AudioStream ] << $1.to_i
+                    #pp "Audio Stream #{$1}"
+                  end
+                  log.puts line if log != nil
+                end
+              end
+            end
+          rescue EOFError,Errno::EPIPE
+          rescue => e
+            p $!
+            e.backtrace.each {|s| puts s }
+          end
+        end
+      end
+    end
+    
+    log.close if log != nil
+    return r
   end
 
   

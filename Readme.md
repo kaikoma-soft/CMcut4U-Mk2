@@ -2,7 +2,8 @@
 
 ## はじめに
 
-本プログラムは、旧版である CMcut4U (https://github.com/kaikoma-soft/CMcut4U)
+本プログラムは、旧版である
+[CMcut4U](https://github.com/kaikoma-soft/CMcut4U)
 を、精度向上等を目的として再構築したものです。
 
 ## 旧版からの改良点

@@ -21,7 +21,7 @@ class Step2
     vt = para.tsinfo[:duration2]
     sa = ( vt - at ).abs.round(2)
     if sa > 1.0
-      log("警告: 映像(#{vt}秒)と音声(#{at}秒)の時間に差(#{sa}秒}があります。")
+      log("警告: 映像(#{vt}秒)と音声(#{at}秒)の時間に差(#{sa}秒)があります。")
     end
     
     scene = scene_ana( para )

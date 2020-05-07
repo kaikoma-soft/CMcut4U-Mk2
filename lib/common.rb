@@ -73,10 +73,10 @@ def alreadyProc?(para, type = nil )
 end
 
 
-def outputChk( fname )
+def outputChk( fname, log = nil )
   ret = []
   if ( size = FileTest.size?( fname )) != nil
-    info = Ffmpeg.new( fname ).getTSinfo( )
+    info = Ffmpeg.new( fname ).getTSinfo( log )
     ret << sprintf("出力済み  size  = %.1f Mbyte",(size.to_f / 10 ** 6))
     ret << sprintf("           time  = %d 秒", info[:duration2] )
     return ret

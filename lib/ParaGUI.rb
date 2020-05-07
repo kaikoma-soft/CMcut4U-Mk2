@@ -209,22 +209,29 @@ class ParaGUI
 
     ###
     y += 1
+    label = " CMの中から提供候補を探して印を付ける"
+    ws[:opt_sponsor_search] = Gtk::CheckButton.new( label )
+    tbl3.attach( ws[:opt_sponsor_search], 0, 2, y, y+1, *@tblarg )
+
+    ###
+    y += 1
     hbox = Gtk::HBox.new(false, 0)
-    label = " ２カ国語番組のモノラル化 ("
-    ws[:opt_mono] = Gtk::CheckButton.new( label )
-    hbox.pack_start(ws[:opt_mono], true, true, 0)
+
+    label1 = Gtk::Label.new("２カ国語放送")
+    hbox.pack_start( label1, false, true, 10)
+
+    label = "そのまま"
+    ws[:opt_mono0] = Gtk::RadioButton.new( label )
+    hbox.pack_start(ws[:opt_mono0], true, true, 0)
 
     label = "ステレオの左を残す"
-    ws[:opt_mono1] = Gtk::RadioButton.new( label )
+    ws[:opt_mono1] = Gtk::RadioButton.new(ws[:opt_mono0], label )
     hbox.pack_start(ws[:opt_mono1], true, true, 0)
 
     label = "ストリーム 0 を残す"
-    ws[:opt_mono2] = Gtk::RadioButton.new(ws[:opt_mono1], label )
+    ws[:opt_mono2] = Gtk::RadioButton.new(ws[:opt_mono0], label )
     hbox.pack_start(ws[:opt_mono2], true, true, 0)
 
-    label = Gtk::Label.new(")")
-    hbox.pack_start(label, true, true, 0)
-    
     tbl3.attach( hbox, 0, 2, y, y+1, *@tblarg )
 
     ###
@@ -246,12 +253,6 @@ class ParaGUI
 
     # tbl3.attach( hbox, 0, 1, y, y+1, *@tblarg )
 
-
-    ###
-    y += 1
-    label = " CMの中から提供候補を探して印を付ける"
-    ws[:opt_sponsor_search] = Gtk::CheckButton.new( label )
-    tbl3.attach( ws[:opt_sponsor_search], 0, 2, y, y+1, *@tblarg )
 
     ###
     y += 1
@@ -313,19 +314,6 @@ class ParaGUI
     
     # ###
     y += 1
-    label = " 本編直後にある 10秒のセクションは提供とみなす"
-    ws[:opt_sponor_10sec] = Gtk::CheckButton.new( label )
-    tbl3.attach( ws[:opt_sponor_10sec], 0, 2, y, y+1, *@tblarg )
-
-
-    # ###
-    y += 1
-    label = " 処理前に TS -> PS のコンテナ変換を行う(TSファイルがseek できない場合)"
-    ws[:opt_containerConv] = Gtk::CheckButton.new( label )
-    tbl3.attach( ws[:opt_containerConv], 0, 2, y, y+1, *@tblarg )
-
-    # ###
-    y += 1
     hbox = Gtk::HBox.new( false )
     label = Gtk::Label.new("mp4 エンコード用シェルスクリプトの指定")
     hbox.pack_start(label, false, true, 10)
@@ -338,6 +326,19 @@ class ParaGUI
     hbox.pack_start(ws[:tomp4], false, true, 10)
     
     tbl3.attach( hbox, 0, 2, y, y+1, *@tblarg )
+    # ###
+    y += 1
+    label = " 本編直後にある 10秒のセクションは提供とみなす"
+    ws[:opt_sponor_10sec] = Gtk::CheckButton.new( label )
+    tbl3.attach( ws[:opt_sponor_10sec], 0, 2, y, y+1, *@tblarg )
+
+
+    # ###
+    y += 1
+    label = " 前処理でコンテナ変換を行う(TSファイルがseek できない場合に使用)"
+    ws[:opt_containerConv] = Gtk::CheckButton.new( label )
+    tbl3.attach( ws[:opt_containerConv], 0, 2, y, y+1, *@tblarg )
+
 
     ###
     y += 1

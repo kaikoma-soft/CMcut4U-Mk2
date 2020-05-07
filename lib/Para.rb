@@ -115,8 +115,8 @@ class Para
     return nil
   end
 
-  def psfn()                    # ts -> ps 変換後のファイル名
-    return @workd + "/" + @fnbase + ".ps"
+  def psfn()                    # ts -> mp4 変換後のファイル名
+    return @workd + "/" + @fnbase + ".mp4"
   end
 
 end
