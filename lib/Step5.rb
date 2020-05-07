@@ -37,7 +37,7 @@ class Step5
     concat(cmList,  para.cmmp4fn,chap, CM)
     saveDigest( [ para.chapfn, para.fixfn ], para.chapHash )
 
-    if ( ret = outputChk( para.mp4fn )) != nil
+    if ( ret = outputChk( para.mp4fn, para.workd + "/ffprobe-out.log")) != nil
       log( ret )
     else
       log( "Error: *** 出力ファイルが正常に出力されませんでした。 ***" )
@@ -136,8 +136,9 @@ class Step5
       ss = sprintf("%.3f",c.t)
       w  = sprintf("%.3f",c.w)
       metaf = outf.sub(/\.mp4/,".ini").sub(/\/tmp/,"/meta-tmp")
+      infn = FileTest.size?( @para.psfn ) != nil ? @para.psfn : @para.tsfn
       env = { :OUTPUT   =>  outf,
-              :INPUT    => @para.tsfn,
+              :INPUT    =>  infn,
               :VFOPT    => [],
               :SS       => ss,
               :WIDTH    => w,
@@ -145,15 +146,17 @@ class Step5
               :H265PRESET => c.attr == CM ? "-preset ultrafast" : ""
             }
 
-      mono = ""
-      if @para.fpara.monolingual == 1
-        mono = " -af pan=mono|c0=c0 "
-      elsif @para.fpara.monolingual == 2
-        mono = " -ac 1 -map 0:v -map 0:1 "
-      end
-      env[:MONO] = mono
-
+      mono = " -map 0:v:0 -map 0:a:0 "
       if c.attr != CM 
+        if @para.fpara.monolingual == 0
+          mono = " -map 0:v -map 0:a "
+        elsif @para.fpara.monolingual == 1
+          mono = " -af pan=mono|c0=c0 "
+        elsif @para.fpara.monolingual == 2
+          mono = " -ac 1 -map 0:v:0 -map 0:a:0 "
+        end
+        env[:MONO] = mono
+
         if @para.fpara.deInterlace != nil and @para.fpara.deInterlace != ""
           env[:VFOPT] << @para.fpara.deInterlace
         end

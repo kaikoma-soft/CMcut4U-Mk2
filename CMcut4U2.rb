@@ -87,7 +87,6 @@ class Main
           fpara = para.readParaFile()
           next if $opt.empty == true
         end
-        pp path
         ParaGUI.new( para.subdir, para: para )
       end
       endProc()
@@ -282,7 +281,7 @@ class Main
         FileUtils.mkpath( dir )
       end
     end
-    para.tsinfo( para.workd + "/ffprobe.log" )
+    para.tsinfo( para.workd + "/ffprobe-in.log" )
 
     if ! fileValid?( para.chapfn ) or $opt.force
       Step1.new.run(para)                         # step1: 前処理

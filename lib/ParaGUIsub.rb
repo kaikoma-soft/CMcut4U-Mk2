@@ -101,8 +101,8 @@ class ParaGUI
     ws[:opt_cs].active=(false)
     ws[:opt_nhk].active=(false)
     ws[:opt_fadeout].active=(false)
-    ws[:opt_mono].active=(false)
-    ws[:opt_mono1].active=(true)
+    ws[:opt_mono0].active=(true)
+    ws[:opt_mono1].active=(false)
     ws[:opt_mono2].active=(false)
     ws[:opt_vfopt].set_text("")
     ws[:opt_termstime].set_text("")
@@ -190,8 +190,8 @@ class ParaGUI
         
         if @fpara.monolingual != nil
           mode = @fpara.monolingual.to_i
-          ws[:opt_mono].active = true if mode > 0
           case mode
+          when 0 then ws[:opt_mono0].active = true
           when 1 then ws[:opt_mono1].active = true
           when 2 then ws[:opt_mono2].active = true
           end
@@ -305,12 +305,9 @@ class ParaGUI
     @fpara.nhk_type = ws[:opt_nhk].active?     ? true : false
     @fpara.fadeOut = ws[:opt_fadeout].active?   ? true : false
 
-    if ws[:opt_mono].active?
-      @fpara.monolingual = 1 if ws[:opt_mono1].active?
-      @fpara.monolingual = 2 if ws[:opt_mono2].active?
-    else
-      @fpara.monolingual = 0
-    end
+    @fpara.monolingual = 0 if ws[:opt_mono0].active?
+    @fpara.monolingual = 1 if ws[:opt_mono1].active?
+    @fpara.monolingual = 2 if ws[:opt_mono2].active?
 
     tmp = ws[:opt_vfopt].text
     if tmp != nil

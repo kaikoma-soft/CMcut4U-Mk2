@@ -148,7 +148,7 @@ class ParaFile
       a = old.instance_variable_get( name ) 
       b = new.instance_variable_get( name )
       if a != b
-        pp "#{name} : #{a} -> #{b}"
+        #pp "#{name} : #{a} -> #{b}"
         return true
       end
       false

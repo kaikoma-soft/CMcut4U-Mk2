@@ -8,7 +8,7 @@ $FFMPEG \
     -loglevel $LOGLEVEL  -hide_banner \
     -f concat -safe 0 \
     -i "$INPUT" \
-    -c:v copy -c:a copy \
+    -c:v copy -c:a copy -map 0:v -map 0:a \
     -y "$OUTPUT" 
 
 #
@@ -22,7 +22,7 @@ then
         -i "$OUTPUT" \
         -i "$METAFN" \
         -map_metadata 1 \
-        -c copy  \
+        -c:v copy -c:a copy -map 0:v -map 0:a \
         -f mp4 \
         -y "$TMP"
 
