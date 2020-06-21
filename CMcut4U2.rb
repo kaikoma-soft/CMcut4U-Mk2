@@ -17,6 +17,11 @@ class Main
     end
     $workFile = []
     $result = Result.new()
+
+    if Object.const_defined?(:FrontMargin) != true
+      Object.const_set("FrontMargin", 1 )
+    end
+    
   end
 
   def interrupt()

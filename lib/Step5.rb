@@ -56,7 +56,7 @@ class Step5
     chap.each do |c|
       if c.attr == type or c.attr == EOD
         endt = time + c.w.to_f
-        endt -= 2.0 if n == 0
+        endt -= FrontMargin.to_f if n == 0
         if @para.fpara.fadeOut == true
           endt += FadeOutTime.to_f
         end
