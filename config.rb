@@ -28,6 +28,7 @@ FadeOut     = false   # チャプターの継ぎ目にFadeOutを挿入するか�
 FadeOutTime = 0.5     # FadeOut の時間(秒)
 Autoremove  = true    # 最後に作業ディレクトリの自動削除を行うか(ture=する)
 TsExpireDay = 3       # TSファイルをゴミ箱に移動した後、何日で削除するか(日)
+FrontMargin = 1       # チャプターを打つタイミングとの継ぎ目のマージン(秒)
 
 TSdir       = Top + "/TS"
 Outdir      = Top + "/mp4"
