@@ -13,7 +13,11 @@ PYTHON_BIN  = "/usr/bin/python"
 NomalSize   = "1280x720"
 CMSize      = "640x360"
 ToMp4       = "to_mp4.sh"
-MpvOption   = "-geometry +840+154"
+
+#
+#  mpv オプション
+#
+Mpv_opt = %w( --osd-duration=3000 --osd-level=2 --really-quiet -geometry +840+154 --autofit=720x405  )
 
 DeInterlaceList = [ "",
                     "yadif=0:-1:1",
