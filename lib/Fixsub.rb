@@ -304,13 +304,6 @@ class Fixgui
       File.mkfifo( fifo )
       
       cmd = Mpv_opt.dup + %W( --idle --input-file=#{fifo} ) 
-      if Object.const_defined?(:MpvOption) == true
-        cmd += MpvOption.split
-      end
-      if @para.tsinfo[:width].to_i > 1000
-        cmd << "--window-scale=0.5"
-      end
-      
       cmd << fn
       
       begin

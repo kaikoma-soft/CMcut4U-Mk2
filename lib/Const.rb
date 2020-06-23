@@ -26,4 +26,3 @@ LOGO   = :logo                 # logo あり
 SOD    = :start                # 開始 Start Of Data
 EOD    = :end                  # 終端 End Of Data
   
-Mpv_opt=%w( --osd-duration=3000 --osd-level 2 --really-quiet )
