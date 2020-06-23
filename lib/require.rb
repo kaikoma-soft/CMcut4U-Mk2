@@ -29,3 +29,7 @@ require_relative 'ParaFile.rb'
 require_relative 'ChapFix.rb'
 require_relative 'Step3des.rb'
 require_relative 'Result.rb'
+
+if Array.method_defined?(:sum) == false
+  require_relative 'ArraySum.rb'
+end
