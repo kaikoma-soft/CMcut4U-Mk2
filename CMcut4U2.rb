@@ -47,9 +47,13 @@ class Main
     Signal.trap( :HUP )  { interrupt() }
     Signal.trap( :INT )  { interrupt() }
 
-    unless FileTest.directory?( $opt.workdir )
-      FileUtils.mkpath( $opt.workdir )
+    [ $opt.workdir , $opt.logodir, $opt.outdir ].each do |dir|
+      unless FileTest.directory?(dir)
+        FileUtils.mkpath( dir )
+        log( "mkdir #{dir}" )
+      end
     end
+
     
     #
     # main
@@ -59,6 +63,11 @@ class Main
     flist = {}
     plist = []
     if $opt.indir != nil
+      unless FileTest.directory?( $opt.indir )
+        log( "Error: 入力Dirが見つかりません。(#{$opt.indir})" )
+        exit
+      end
+
       Find.find( $opt.indir ) do |path|
         if FileTest.size?( path ) != nil
           dir = File.dirname( path )

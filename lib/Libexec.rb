@@ -82,8 +82,12 @@ class Libexec
           end
           $workFile.delete( outfn )
           lap = Time.now - st
-          w = env[:WIDTH].to_f
-          speed = w / lap
+          speed = 0
+          if env != nil and env[:WIDTH] != nil 
+            w = env[:WIDTH].to_f
+            speed = w / lap
+          end
+          
           if speed > 0
             outf = File.basename(env[:OUTPUT])
             log( sprintf("%6.2f Sec (%4.1fx)  %s %s",
