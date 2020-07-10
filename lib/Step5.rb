@@ -37,11 +37,32 @@ class Step5
     concat(cmList,  para.cmmp4fn,chap, CM)
     saveDigest( [ para.chapfn, para.fixfn ], para.chapHash )
 
-    if ( ret = outputChk( para.mp4fn, para.workd + "/ffprobe-out.log")) != nil
+    logfn = para.workd + "/ffprobe-out.log"
+    if ( ret = outputChk( para.mp4fn, para, logfn )) != nil
       log( ret )
     else
       log( "Error: *** 出力ファイルが正常に出力されませんでした。 ***" )
     end
+
+    #
+    # 字幕付加
+    #
+    if para.subtitle?() == true
+      if FileTest.size?( para.subtitlefn ) != nil
+        cstt = ConvSubTT.new
+        subfn = cstt.run( para.subtitlefn, chap, para )
+        if cstt.chk_sub_data( subfn ) == true
+          log( "字幕書き込み" )
+          setSubtitle( para.mp4fn, subfn, para.mkvfn, para.cmcutLog )
+          if FileTest.size?( para.mkvfn ) != nil
+            File.unlink( para.mp4fn )
+          end
+        else
+          log( "字幕データが空です。-> 字幕処理 off " )
+        end
+      end
+    end
+    
   end
 
 

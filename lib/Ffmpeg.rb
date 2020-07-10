@@ -60,27 +60,29 @@ class Ffmpeg
   #
   def getTSinfo( logfn = nil )
 
-    log = nil
+    logfp = nil
     r = {}
     r[ :fname ] = @tsfn
+    r[ :subtitle ] = false
     keys = %w( width height codec_long_name duration field_order display_aspect_ratio codec_name )
     arg = [  ]
     arg += %W( -pretty -hide_banner -show_streams  #{@tsfn} )
-    log = File.open( logfn, "w" )  if logfn != nil
-    log.printf( "%s\n\n",arg.join(" ") ) if log != nil
+    logfp = File.open( logfn, "w" )  if logfn != nil
+    logfp.printf( "%s\n\n",arg.join(" ") ) if logfp != nil
     
     IO.popen( ["ffprobe", *arg], "r",:err=>[:child, :out] ) do |fp|
       fp.each_line do |line|
         line = NKF::nkf("-w",line.chomp)
-        log.puts( line ) if log != nil
+        logfp.puts( line ) if logfp != nil
         keys.each do |k|
           if line =~ /^#{k}=(.*)/
             if $1 != "N/A"
               r[ k.to_sym ] = $1 if r[ k.to_sym ] == nil
             end
-          elsif line =~ /^\s+Duration: (.*?),/
-            r[ :duration ] = $1 if r[ :duration ] == nil
           end
+        end
+        if line =~ /^\s+Duration: (.*?),/
+          r[ :duration ] = $1 if r[ :duration ] == nil and $1 != "N/A"
         end
       end
     end
@@ -91,9 +93,10 @@ class Ffmpeg
       end
     end
 
-    [ :duration2, :width, :height ].each do |key|
+    [ :duration, :duration2,  :width, :height ].each do |key|
       if r[ key ] == nil
-        raise "#{key.to_s} is nil #{@tsfn}"
+        log( "Error: #{key.to_s} is nil #{@tsfn}")
+        return nil
       end
     end
 
@@ -105,7 +108,7 @@ class Ffmpeg
     r[ :AudioStream ] = []
     if @tsfn =~ /\.ts$/
       if ( size = File.size( @tsfn )) != nil
-        log.puts( "\n\n" + "-" * 20 + "\n\n") if log != nil
+        logfp.puts( "\n\n" + "-" * 20 + "\n\n") if logfp != nil
         cmd = %w( ffprobe - )
         bsize = 1024 * 1024 
         outbuf = "x" * bsize
@@ -135,8 +138,10 @@ class Ffmpeg
                   if line =~/Stream \#0:(\d+)\[.*?\]: Audio/
                     r[ :AudioStream ] << $1.to_i
                     #pp "Audio Stream #{$1}"
+                  elsif line =~ /Subtitle: arib_caption/
+                    r[ :subtitle ] = true
                   end
-                  log.puts line if log != nil
+                  logfp.puts line if logfp != nil
                 end
               end
             end
@@ -148,8 +153,8 @@ class Ffmpeg
         end
       end
     end
-    
-    log.close if log != nil
+
+    logfp.close if logfp != nil
     return r
   end
 

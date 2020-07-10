@@ -2,6 +2,48 @@
 # -*- coding: utf-8 -*-
 #
 
+#
+#  dir 作成
+#
+def mkdirs( *dirs )
+  dirs.each do |dir|
+    unless FileTest.directory?(dir)
+      FileUtils.mkpath( dir )
+      log( "mkdir #{dir}" ) if $opt.debug == true
+    end
+  end
+end
+
+
+#
+#  字幕抽出
+#
+def getSubtitle( para )
+
+  if FileTest.size?( para.subtitlefn ) == nil
+    env = { "INPUT" => para.tsfn,
+            "OUTPUT" => para.subtitlefn,
+          }
+    exec = Libexec.new
+    exec.run( :getAss, env, outfn: para.subtitlefn, log: para.cmcutLog  )
+  end
+
+end
+
+
+#
+# 字幕付加
+#
+def setSubtitle( infn, assfn, outfn, logfn )
+  env = { "INPUT"   => infn,
+          "ASSFILE" => assfn,
+          "OUTPUT"  => outfn,
+        }
+  exec = Libexec.new
+  exec.run( :setAss, env, outfn: outfn, log: logfn  )
+end
+
+
 
 def log( str )
 
@@ -61,11 +103,15 @@ def alreadyProc?(para, type = nil )
     if type == :all or ( fileValid?( para.chapfn ) and
                          FileTest.exist?( para.step4okfn ) and
                          goEnc?( para ) == false )
-      if ( ret = outputChk( para.mp4fn )) != nil
-        log( ret )
-        $result.incOk 
-        $result.encFin += 1
-        return true
+      fns = [ para.mp4fn ]
+      fns << para.mkvfn if para.subtitle? == true
+      fns.each do |fn|
+        if ( ret = outputChk( fn, para )) != nil
+          log( ret )
+          $result.incOk 
+          $result.encFin += 1
+          return true
+        end
       end
     end
   end
@@ -73,12 +119,11 @@ def alreadyProc?(para, type = nil )
 end
 
 
-def outputChk( fname, log = nil )
+def outputChk( fname, para, log = nil )
   ret = []
   if ( size = FileTest.size?( fname )) != nil
-    info = Ffmpeg.new( fname ).getTSinfo( log )
     ret << sprintf("出力済み  size  = %.1f Mbyte",(size.to_f / 10 ** 6))
-    ret << sprintf("           time  = %d 秒", info[:duration2] )
+    ret << sprintf("           time  = %d 秒", para.tsinfo[:duration2] )
     return ret
   end
   nil
@@ -118,11 +163,14 @@ end
 
 #
 #   ファイルが存在して、サイズが 0 以上なら true
+#   複数の場合は、どれか１つでも存在すれば true
 #
-def fileValid?( file )
-  if FileTest.file?( file )
-    unless FileTest.zero?( file )
-      return true
+def fileValid?( *list )
+  list.each do |fn|
+    if FileTest.file?( fn )
+      unless FileTest.zero?( fn )
+        return true
+      end
     end
   end
   return false

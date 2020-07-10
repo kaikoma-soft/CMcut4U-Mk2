@@ -14,4 +14,4 @@
   H265PRESET: H265 PRESET
   MONO     : ２カ国語対応のオプション
   METAFN   : メタデータのファイル名
-
+  SRTFILE  : 字幕ファイル名

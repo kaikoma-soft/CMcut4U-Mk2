@@ -21,6 +21,9 @@ class Main
     if Object.const_defined?(:FrontMargin) != true
       Object.const_set("FrontMargin", 1 )
     end
+    if Object.const_defined?(:Subtitling) != true
+      Object.const_set("Subtitling", false )
+    end
     
   end
 
@@ -47,13 +50,7 @@ class Main
     Signal.trap( :HUP )  { interrupt() }
     Signal.trap( :INT )  { interrupt() }
 
-    [ $opt.workdir , $opt.logodir, $opt.outdir ].each do |dir|
-      unless FileTest.directory?(dir)
-        FileUtils.mkpath( dir )
-        log( "mkdir #{dir}" )
-      end
-    end
-
+    mkdirs( $opt.workdir , $opt.logodir, $opt.outdir )
     
     #
     # main
@@ -137,6 +134,10 @@ class Main
       end
       
       log("#{n+1}/#{flist.size}  #{para.subdir}/#{para.fnbase2}")
+
+      mkdirs( para.workd )
+      para.tsinfo( para.workd + "/ffprobe-in.log" )
+      
       if $opt.ts2mp4 == true
         ts2mp4( para )
       elsif $opt.viewchk == true
@@ -189,6 +190,7 @@ class Main
     log("view check start")
 
     list = [ para.mp4fn ]
+    list.unshift( para.mkvfn ) if Subtitling == true 
     list << para.cmmp4fn  if para.fpara.cmcut_skip == false
     found = false
     afterFix = false
@@ -202,7 +204,7 @@ class Main
             pid = system( "mpv", *cmd )
             found = true
           else
-            log("not found #{fn}")
+            #log("not found #{fn}")
           end
         end
         break if found == false
@@ -231,12 +233,19 @@ class Main
   def allmp4( para )
 
     return if alreadyProc?(para, :all ) == true
-
+    return if para.tsinfo == nil
+    
     log("allmp4 start")
     stime = Time.now
     
-    if FileTest.size?( para.mp4fn ) == nil
-      env = { :OUTPUT   => para.mp4fn,
+    if fileValid?( para.mp4fn, para.mkvfn ) == false
+
+      outfn = para.mp4fn
+      if para.subtitle? == true
+        outfn = sprintf("%s/tmp.mp4", para.workd )
+      end
+      
+      env = { :OUTPUT   => outfn,
               :INPUT    => para.tsfn,
               :VFOPT    => [],
               :SS       => 0,
@@ -264,10 +273,20 @@ class Main
         w = para.tsinfo[:width].to_i
         env[ :SIZE ] = sprintf("%dx%d",w,h )
       end
-        
+
       makePath( para.mp4fn )
       exec = Libexec.new(para.fpara.tomp4)
-      exec.run( :tomp4, env, outfn: para.mp4fn )
+      exec.run( :tomp4, env, outfn: outfn )
+
+      # 字幕処理
+      if para.subtitle? == true
+        getSubtitle( para )
+        if FileTest.size?( para.subtitlefn ) != nil
+          subfn = ConvSubTT.new.run( para.subtitlefn, nil, para )
+          setSubtitle( outfn, subfn, para.mkvfn, para.cmcutLog )
+        end
+      end
+      
     end
 
     lap = Time.now - stime 
@@ -281,6 +300,7 @@ class Main
   def cmcut( para )
 
     return if alreadyProc?(para) == true
+    return if para.tsinfo == nil
     
     # 初期設定
     $cmcutLog = para.cmcutLog
@@ -289,13 +309,7 @@ class Main
     end
     log("cmcut start")
     stime = Time.now
-
-    [ para.workd , para.cached ].each do |dir|
-      unless FileTest.directory?(dir)
-        FileUtils.mkpath( dir )
-      end
-    end
-    para.tsinfo( para.workd + "/ffprobe-in.log" )
+    mkdirs( para.workd , para.cached )
 
     if ! fileValid?( para.chapfn ) or $opt.force
       Step1.new.run(para)                         # step1: 前処理
