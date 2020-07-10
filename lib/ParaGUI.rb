@@ -20,6 +20,12 @@ class ParaGUI
     @para  = para
     @fpara = para.fpara
 
+    if Object.const_defined?(:ForceCmTime) == true
+      @cmTime = ForceCmTime
+    else
+      @cmTime = [ 3, 5, 10, 15, 20, 30, 60 ] # 未定義の場合のデフォルト
+    end
+
     #
     # 前準備
     #
@@ -143,9 +149,11 @@ class ParaGUI
       tbl2.attach( label, n, n+1, 0, 1, *@tblarg )
       ws[:cs][n] = Gtk::Entry.new
       ws[:cs][n].set_size_request(w, -1)
+      ws[:cs][n].set_xalign(1)
       tbl2.attach( ws[:cs][n], n, n+1, 1, 2, *@tblarg )
       ws[:dr][n] = Gtk::Entry.new
       ws[:dr][n].set_size_request(w, -1)
+      ws[:dr][n].set_xalign(1)
       tbl2.attach( ws[:dr][n], n, n+1, 2, 3, *@tblarg )
     end
 
@@ -192,6 +200,7 @@ class ParaGUI
     label1 = Gtk::Label.new("検出する無音期間")
     ws[:opt_termstime] = Gtk::Entry.new
     ws[:opt_termstime].set_size_request(50, -1)
+    ws[:opt_termstime].set_xalign(1)
     label2 = Gtk::Label.new("秒以上 )")
 
     hbox.pack_start(ws[:opt_nhk], false, false, 0)
@@ -259,32 +268,14 @@ class ParaGUI
     hbox = Gtk::HBox.new( false )
     label1 = Gtk::Label.new("n秒のセクションを強制的にCM にする  ")
     hbox.pack_start( label1, false, true, 10)
-    label5  = "5秒"
-    label10 = "10秒"
-    label15 = "15秒"
-    label20 = "20秒"
-    label30 = "30秒"
-    label50 = "50秒"
-    label60 = "60秒"
-    label90 = "90秒"
-    ws[:opt_cm5sec] = Gtk::CheckButton.new( label5 )
-    ws[:opt_cm10sec] = Gtk::CheckButton.new( label10 )
-    ws[:opt_cm15sec] = Gtk::CheckButton.new( label15 )
-    ws[:opt_cm20sec] = Gtk::CheckButton.new( label20 ) 
-    ws[:opt_cm30sec] = Gtk::CheckButton.new( label30 ) 
-    ws[:opt_cm50sec] = Gtk::CheckButton.new( label50 )
-    ws[:opt_cm60sec] = Gtk::CheckButton.new( label60 ) 
-    ws[:opt_cm90sec] = Gtk::CheckButton.new( label90 )
-    hbox.pack_start(ws[:opt_cm5sec], false, true, 10)
-    hbox.pack_start(ws[:opt_cm10sec], false, true, 0)
-    hbox.pack_start(ws[:opt_cm15sec], false, true, 0)
-    hbox.pack_start(ws[:opt_cm20sec], false, true, 0)
-    hbox.pack_start(ws[:opt_cm30sec], false, true, 0)
-    hbox.pack_start(ws[:opt_cm50sec], false, true, 0)
-    hbox.pack_start(ws[:opt_cm60sec], false, true, 0)
-    hbox.pack_start(ws[:opt_cm90sec], false, true, 0)
+    @cmTime.each do |time|
+      sym = cmTime2sym( time )
+      label  = sprintf("%d秒",time)
+      ws[sym] = Gtk::CheckButton.new( label )
+      hbox.pack_start(ws[sym], false, true, 2)
+    end
     tbl3.attach( hbox, 0, 3, y, y+1, *@tblarg )
-
+    
     ###
     y += 1
     hbox = Gtk::HBox.new( false )
@@ -339,6 +330,19 @@ class ParaGUI
     ws[:opt_containerConv] = Gtk::CheckButton.new( label )
     tbl3.attach( ws[:opt_containerConv], 0, 2, y, y+1, *@tblarg )
 
+
+    ###
+    y += 1
+    hbox = Gtk::HBox.new( false )
+    label = Gtk::Label.new("字幕のタイミング調整")
+    hbox.pack_start(label, false, true, 10)
+    ws[:opt_subadj] = Gtk::Entry.new
+    ws[:opt_subadj].set_size_request(50, -1)
+    ws[:opt_subadj].set_xalign(1)
+    hbox.pack_start(ws[:opt_subadj], false, true, 10)
+    label = Gtk::Label.new("秒")
+    hbox.pack_start(label, false, true, 0)
+    tbl3.attach( hbox, 0, 1, y, y+1, *@tblarg )
 
     ###
     y += 1

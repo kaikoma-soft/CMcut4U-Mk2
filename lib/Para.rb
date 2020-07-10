@@ -32,9 +32,10 @@ class Para
                 :scene,         # シーンチェンジ データ
                 :step3desfn,    # Step3 の処理の説明文
                 :step4result,   # Step4の結果
-                :step4okfn      # Step4 が OK の場合に touch
-  
-  
+                :step4okfn,     # Step4 が OK の場合に touch
+                :subtitlefn,    # 字幕(ass) ファイル名
+                :mkvfn,         # 字幕が有効な場合の出力ファイル名(mp4fn相当)
+                :tsinfoData     # tsinfo の結果格納
   
   
   def initialize( apath: nil, base: nil )
@@ -54,9 +55,11 @@ class Para
 
     if @subdir != nil
       @mp4fn  = sprintf("%s/%s/%s.mp4",$opt.outdir,@subdir,@fnbase )
+      @mkvfn  = sprintf("%s/%s/%s.mkv",$opt.outdir,@subdir,@fnbase )
       @workd  = sprintf("%s/%s/%s", $opt.workdir, @subdir, fnbase )
     else
       @mp4fn  = sprintf("%s/%s.mp4",$opt.outdir,@fnbase )
+      @mkvfn  = sprintf("%s/%s.mkv",$opt.outdir,@fnbase )
       @workd  = sprintf("%s/%s", $opt.workdir, fnbase )
     end
     @cmmp4fn  = @workd + "/cm-all.mp4"
@@ -81,9 +84,23 @@ class Para
     @cutSkip   = false
     @step4result = false
     @step4okfn = @workd + "/step4.ok"
-    
+    @subtitlefn  = @workd + "/subtitle.ass"
+
   end
 
+  #
+  # 字幕処理をするか
+  #
+  def subtitle?()
+    if Subtitling == true
+      if @tsinfoData != nil
+        if @tsinfoData[:subtitle] == true
+          return true
+        end
+      end
+    end
+    return false
+  end
 
   def setLogofn( str )
     @logofn = sprintf("%s/%s",LogoDir,str )
@@ -96,8 +113,11 @@ class Para
   #  TSの諸元取得
   #
   def tsinfo( log = nil )
-    if @tsinfoData == nil
+    if @tsinfoData == nil and @tsinfoFail == nil
       @tsinfoData = Ffmpeg.new( @tsfn ).getTSinfo( log )
+      if @tsinfoData == nil
+        @tsinfoFail = true      # 取得に失敗
+      end
     end
     return @tsinfoData
   end

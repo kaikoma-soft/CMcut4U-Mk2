@@ -107,18 +107,15 @@ class ParaGUI
     ws[:opt_vfopt].set_text("")
     ws[:opt_termstime].set_text("")
     ws[:opt_sponsor_search].active=(false)
-    ws[:opt_cm5sec].active=(false)
-    ws[:opt_cm10sec].active=(false)
-    ws[:opt_cm15sec].active=(false)
-    ws[:opt_cm20sec].active=(false)
-    ws[:opt_cm30sec].active=(false)
-    ws[:opt_cm50sec].active=(false)
-    ws[:opt_cm60sec].active=(false)
-    ws[:opt_cm90sec].active=(false)
     ws[:opt_containerConv].active=(false)
     ws[:tomp4].set_active(-1)
     ws[:deInterlace].set_active(-1)
     ws[:opt_sponor_10sec].active=(false)
+    ws[:opt_subadj].set_text("0.0")
+    @cmTime.each do |time|
+      sym = cmTime2sym( time )
+      ws[sym].active=(false)
+    end
 
     
     # 値をセット
@@ -178,12 +175,15 @@ class ParaGUI
         if @fpara.ffmpeg_vfopt != nil
           ws[:opt_vfopt].set_text(@fpara.ffmpeg_vfopt )
         end
+
+        if @fpara.subadj != nil
+          ws[:opt_subadj].set_text(@fpara.subadj.to_s )
+        end
         
         if @fpara.fadeOut
           ws[:opt_fadeout].active=(true)
         end
         
-
         if @fpara.nhk_type
           ws[:opt_nhk].active=(true)
         end
@@ -205,37 +205,13 @@ class ParaGUI
           ws[:opt_sponsor_search].active=(true)
         end
 
-        if @fpara.cmSec.include?(5)
-          ws[:opt_cm5sec].active=(true)
+        @cmTime.each do |time|
+          if @fpara.cmSec.include?(time)
+            sym = cmTime2sym( time )
+            ws[sym].active=(true)
+          end
         end
-
-        if @fpara.cmSec.include?(10)
-          ws[:opt_cm10sec].active=(true)
-        end
-
-        if @fpara.cmSec.include?(15)
-          ws[:opt_cm15sec].active=(true)
-        end
-
-        if @fpara.cmSec.include?(20)
-          ws[:opt_cm20sec].active=(true)
-        end
-        if @fpara.cmSec.include?(30)
-          ws[:opt_cm30sec].active=(true)
-        end
-
-        if @fpara.cmSec.include?(50)
-          ws[:opt_cm50sec].active=(true)
-        end
-
-        if @fpara.cmSec.include?(60)
-          ws[:opt_cm60sec].active=(true)
-        end
-
-        if @fpara.cmSec.include?(90)
-          ws[:opt_cm90sec].active=(true)
-        end
-
+        
         if @fpara.containerConv
           ws[:opt_containerConv].active=(true)
         end
@@ -314,6 +290,11 @@ class ParaGUI
       @fpara.ffmpeg_vfopt = tmp
     end
 
+    tmp = ws[:opt_subadj].text
+    if tmp != nil
+      @fpara.subadj = tmp.to_f
+    end
+    
     tmp = ws[:opt_termstime].text
     if tmp != nil and tmp != ""
       @fpara.terminator_stime = tmp.to_f
@@ -321,14 +302,13 @@ class ParaGUI
 
     @fpara.sponsor_search = ws[:opt_sponsor_search].active?   ? true : false
     @fpara.cmSec = []
-    @fpara.cmSec << 5 if ws[:opt_cm5sec].active? 
-    @fpara.cmSec << 10 if ws[:opt_cm10sec].active? 
-    @fpara.cmSec << 15 if ws[:opt_cm15sec].active? 
-    @fpara.cmSec << 20 if ws[:opt_cm20sec].active? 
-    @fpara.cmSec << 30 if ws[:opt_cm30sec].active? 
-    @fpara.cmSec << 50 if ws[:opt_cm50sec].active? 
-    @fpara.cmSec << 60 if ws[:opt_cm60sec].active? 
-    @fpara.cmSec << 90 if ws[:opt_cm90sec].active? 
+    @cmTime.each do |time|
+      sym = cmTime2sym( time )
+      if ws[sym].active?
+        @fpara.cmSec << time
+      end
+    end
+
     @fpara.containerConv = ws[:opt_containerConv].active?  ? true : false
 
     @fpara.tomp4 = ws[:tomp4].active_text
@@ -339,6 +319,10 @@ class ParaGUI
     path = sprintf("%s/%s/para.yaml",$opt.indir, dir )
     @fpara.save( path, para: @para )
 
+    end
+ 
+  def cmTime2sym( time )
+    return sprintf("opt_cm%dsec", time ).to_sym
   end
-
+  
 end

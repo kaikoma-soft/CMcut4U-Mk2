@@ -15,6 +15,10 @@ class Libexec
       :logoana   => "logoAnalysisSub.py",
       :container => "containerConv.sh",
       :concat    => "concat.sh",
+      :getSubtitle => "to_srt.sh",
+      :setSubtitle => "set_srt.sh",
+      :getAss    => "to_ass.sh",
+      :setAss    => "set_ass.sh",
     }
 
     # :tomp4 の設定優先順位は  引数 > パラメータファイル > config > デフォルト

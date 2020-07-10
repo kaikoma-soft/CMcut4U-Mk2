@@ -28,7 +28,8 @@ class ParaFile
                   :tomp4,
                   :containerConv,
                   :sponor_10sec,
-                  :deInterlace
+                  :deInterlace,
+                  :subadj
 
   def initialize( )
     @cmlogofn = []              # CM ロゴファイル名
@@ -53,6 +54,7 @@ class ParaFile
     @containerConv  = false     # TS -> PS のコンテナ変換を行う
     @sponor_10sec   = false     # 本編直後にある 10秒のセクションは提供とみなす
     @deInterlace    = nil       # インタレース解除
+    @subadj         = 0.0       # 字幕のタイミング調整(秒)
   end
 
   def createSymList( name,min,max )
@@ -237,6 +239,7 @@ class ParaFile
     @deInterlace   = DefaultDeInterlace if @deInterlace == nil
     @audio_only    = true    if @audio_only == nil
     @monolingual   = 0       if @monolingual == nil 
+    @subadj        = 0.0     if @subadj == nil
     
     #@chapNum   << 10
     #@duration  << 1440

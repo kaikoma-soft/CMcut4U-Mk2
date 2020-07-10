@@ -14,8 +14,8 @@ SS_rate       = 1.0 / 2
 SS_frame_rate = 2
 
 Pname   = "CMcut4U2.rb"
-Version = "0.1.2"
-Release = "2020-06-23"
+Version = "0.2.0"
+Release = "2020-07-10"
 
 A_OFF  = :A_off                # 音声：無音
 A_ON   = :A_on                 # 音声：音声有り

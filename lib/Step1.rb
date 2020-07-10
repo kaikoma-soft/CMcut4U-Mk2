@@ -34,9 +34,15 @@ class Step1
     if para.fpara.audio_only != true or para.fpara.delogo == true
       makeJpg( para )
     end
+
+    if para.subtitle? == true
+      log( "字幕取得" )
+      getSubtitle( para )
+    end
   end
 
   
+
   #
   #  シーンチェンジ検出
   #
