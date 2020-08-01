@@ -20,7 +20,7 @@ class Step3
     
     log( "### step3 ###")
 
-    if !(para.fpara.audio_only == true) or para.fpara.delogo == true
+    if para.screenS?()
       ( @logo, @cmlogo ) = logoDetection(para)
       Log::save( @logo.dump( "本編ロゴ検出結果" ), para, "step3-1.log"  )
       Log::save( @cmlogo.dump( "CM ロゴ検出結果" ), para, "step3-2.log" )
@@ -28,9 +28,7 @@ class Step3
       if @logo.size < 3
         log("警告: ロゴの検出に失敗しました。")
       end
-      if para.fpara.delogo == true      # logo の存在時間を格納
-        @logo.save( para.logoMarkfn )  
-      end
+      @logo.save( para.logoMarkfn ) # logo の存在時間を格納
     end
 
     if para.fpara.nhk_type == false

@@ -1,11 +1,18 @@
 
+ver 0.3.0           2020/08/01
+  ・機能追加
+    * ロゴ消し機能の追加
+      → config.rb に定数追加
+      → パラメータ設定ダイアログに関連項目を追加
+      詳細は https://kaikoma-soft.github.io/src/CMcut4U2-removelogo.html を参照。
+
 ver 0.2.0           2020/07/10
   ・機能追加
     * TSファイルから字幕データを抽出し、エンコード後に付加するように。
       → config.rb に Subtitling を追加( true の時のみ字幕処理を行う)
       → パラメータ設定ダイアログに、タイミング調整用の項目を追加
       ただし制限事項あり。
-      詳細は https://kaikoma-soft.github.io/subtitle.html を参照。
+      詳細は https://kaikoma-soft.github.io/src/subtitle.html を参照。
     * 強制的に CM にする秒数をユーザーが可変にするため、 config.rb に
       定数 ForceCmTime を導入。
 
