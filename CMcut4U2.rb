@@ -18,11 +18,16 @@ class Main
     $workFile = []
     $result = Result.new()
 
-    if Object.const_defined?(:FrontMargin) != true
-      Object.const_set("FrontMargin", 1 )
-    end
-    if Object.const_defined?(:Subtitling) != true
-      Object.const_set("Subtitling", false )
+    # 追加した定数の設定漏れ防止
+    { "FrontMargin"       => 1,
+      "Subtitling"        => false,
+      "RmLogoDir"         => nil,
+      "RmLogoBlurList"    => {},
+      "RmLogoBlurDefault" => :null,
+    }.each_pair do |k,v|
+      if Object.const_defined?( k.to_sym ) != true
+        Object.const_set( k, v )
+      end
     end
     
   end
@@ -50,7 +55,7 @@ class Main
     Signal.trap( :HUP )  { interrupt() }
     Signal.trap( :INT )  { interrupt() }
 
-    mkdirs( $opt.workdir , $opt.logodir, $opt.outdir )
+    mkdirs( $opt.workdir , $opt.logodir, $opt.outdir, RmLogoDir )
     
     #
     # main
@@ -232,13 +237,13 @@ class Main
   #
   def allmp4( para )
 
-    return if alreadyProc?(para, :all ) == true
+    return if alreadyProc?(para, :all ) == true and $opt.forceEnc == false
     return if para.tsinfo == nil
     
     log("allmp4 start")
     stime = Time.now
-    
-    if fileValid?( para.mp4fn, para.mkvfn ) == false
+
+    if fileValid?( para.mp4fn, para.mkvfn ) == false or $opt.forceEnc == true
 
       outfn = para.mp4fn
       if para.subtitle? == true
@@ -259,7 +264,8 @@ class Main
       elsif para.fpara.monolingual == 2
         env[:MONO] = " -ac 1 -map 0:v -map 0:1 "
       end
-        
+
+      env[ :VFOPT ] += make_rmlogo_vf( para )
       if para.fpara.deInterlace != nil and para.fpara.deInterlace != ""
         env[:VFOPT] << para.fpara.deInterlace
       end

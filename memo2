@@ -1,0 +1,37 @@
+
+convert -resize 1440x1080! mpv-shot0001.jpg tmp1.png
+
+convert tmp2.png -monochrome  tmp3.png
+
+gimp で整形 ->  tmp4.png
+
+ffmpeg -i *.ts -vf "yadif=0:-1:1,decimate,setpts=N/(24000/1001)/TB,removelogo=tmp4.png" -y aho.mp4
+
+* オリジナル
+ffmpeg -i logo.png -vf lutrgb=r=between(val,11,255)*val:g=between(val,11,255)*val:b=between(val,11,255)*val,colorchannelmixer=1.25:1.25:1.25:0:1.25:1.25:1.25:0:1.25:1.25:1.25:0,pad=1920:1080:1700:30,format=gray logo.bmp
+
+* lutrgb のみテスト
+
+ffmpeg -i tmp2.png -vf "lutrgb='r=between(val,11,255)*val:g=between(val,11,255)*val:b=between(val,11,255)*val',format=gray" logo.bmp
+
+* ' でくくる
+ffmpeg -i logo.png -vf "lutrgb='r=between(val,11,255)*val:g=between(val,11,255)*val:b=between(val,11,255)*val',colorchannelmixer=1.25:1.25:1.25:0:1.25:1.25:1.25:0:1.25:1.25:1.25:0,pad=1440:1080:1300:30,format=gray" logo.bmp
+
+
+* エンコード
+ffplay -i *.ts -vf "yadif=0:-1:1,decimate,setpts=N/(24000/1001)/TB,removelogo=logo.png"
+
+* unsharp 付き
+/usr/bin/ffmpeg -i input -loop 1 -i logo.png -filter_complex '[0:0]yadif=0:-1:1,decimate,setpts=N/(24000/1001)/TB,removelogo=logo.png,split[a][b];[a]crop=130:26:1725:30,unsharp=5:5:-1.5:5:5:0.0[a0];[a0][1:0]alphamerge[a1];[b][a0]overlay=1725:30' output
+
+1725 30
+1854 56
+
+* alphamerge 無し -> 動く
+ffmpeg -i input -loop 1 -i logo.png -filter_complex '[0:v]yadif=0:-1:1,decimate,setpts=N/(24000/1001)/TB,removelogo=logo.png,split[a][b];[a]crop=130:26:1725:30,unsharp=5:5:-1.5:5:5:0.0[a0];[b][a0]overlay=1725:30' output
+
+ffmpeg -i input -loop 1 -i logo.png -filter_complex '[0:v]yadif=0:-1:1,decimate,setpts=N/(24000/1001)/TB,removelogo=logo.png,split[a][b];[a]crop=130:26:1725:30,unsharp=5:5:-1.5:5:5:0.0[a0];[b][a0]overlay=1725:30' output
+
+* boxblur=10
+ffmpeg -i input -loop 1 -i logo.png -filter_complex '[0:v]yadif=0:-1:1,decimate,setpts=N/(24000/1001)/TB,removelogo=logo.png,split[a][b];[a]crop=130:26:1725:30,boxblur=5[a0];[b][a0]overlay=1725:30' -c:v h264_nvenc -rc vbr  -movflags faststart -y aho.mp4
+           

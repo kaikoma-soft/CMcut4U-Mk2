@@ -44,6 +44,17 @@ TSdir       = Top + "/TS"
 Outdir      = Top + "/mp4"
 Trashdir    = Top + "/TrashBox"
 LogoDir     = Top + "/logo"
+RmLogoDir   = Top + "/rmlogo"
 Workdir     = Top + "/work"
 LockFile    = Workdir + "/.lock"
 
+RmLogoBlurList = {
+  :null      => "null",                        # 使用しない
+  :avgblur   => "avgblur=3:15:3",
+  :gblur     => "gblur=2:4:15:-1",
+  :smartblur1 => "smartblur=1:1:0:1:1:0",
+  :smartblur2 => "smartblur=2:1:0:2:1:0",
+  :unsharp1   => "unsharp=5:5:-1.0:5:5:-1.0",
+  :unsharp2   => "unsharp=7:7:-1.5:7:7:-1.5",
+  }
+RmLogoBlurDefault = :unsharp1

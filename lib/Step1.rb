@@ -31,9 +31,7 @@ class Step1
     log( "### step1 ###")
     makeWav( para )
     sceneChanges( para )
-    if para.fpara.audio_only != true or para.fpara.delogo == true
-      makeJpg( para )
-    end
+    makeJpg( para ) if para.screenS?()
 
     if para.subtitle? == true
       log( "字幕取得" )

@@ -3,13 +3,80 @@
 #
 
 #
+# ロゴ除去フィルター
+#
+def make_rmlogo_vf( para, ss = nil, w = nil )
+
+  ret = []
+  if para.fpara.rmlogofn != nil and para.fpara.rmlogofn != ""
+    logopos = nil               # ロゴの位置
+    enaTime = ""                # ロゴの出現時間(between化)
+
+    if para.fpara.rmlogofn =~ /\-(\d+)x(\d+)\+(\d+)\+(\d+)\./
+      logopos = [ $1, $2, $3, $4 ]
+    else
+      log("ロゴマスクファイル名の書式が不正です。(#{para.fpara.rmlogofn})")
+      raise
+    end
+
+    if para.fpara.rmlogo_detect == true and ss != nil
+      rmlogo_time = TArray.new               # ロゴの出現時間
+      rmlogo_time.load( para.logoMarkfn )
+      # 短い隙間は削除する。
+      rmlogo_time.each_with_index do |tmp,i|
+        if tmp.attr == NONE
+          if tmp.w <= 6
+            tmp.delMark = true
+            rmlogo_time[i+1].delMark = true if rmlogo_time[i+1] != nil
+          end
+        end
+      end
+      rmlogo_time.del()
+      rmlogo_time.calc()
+      #puts rmlogo_time.dump
+
+      tmp = []
+      rmlogo_time.each do |t|
+        next if t.attr == EOD or ( ss > ( t.t + t.w ) or t.t > ( ss + w ))
+        if t.attr == LOGO
+          s = t.t - ss - 2
+          s = 0 if s < 0
+          tmp << sprintf("between(t,%.1f,%.1f)",s , s + t.w + 3 )
+        end
+      end
+      if tmp.size > 0
+        enaTime = sprintf(":enable='%s'",tmp.join("+"))
+      end
+    end
+    logofn = RmLogoDir + "/" + para.fpara.rmlogofn
+    ( w,h,x, y ) = logopos
+    blur = RmLogoBlurList[ para.fpara.rmlogo_blur ]
+    blur = "null" if blur == nil
+
+    ret = [
+      "split[a][b]",
+      "[a]removelogo=#{logofn}#{enaTime}[a1]",
+      "[a1]crop=#{w}:#{h}:#{x}:#{y}[a2]",
+      "[a2]#{blur}[a3]",
+      "[b][a3]overlay=#{x}:#{y}#{enaTime}",
+    ]
+  end
+
+  return ret
+end
+
+#debugText = "drawtext=text='enable':x=(w-text_w)/2:y=(h-text_h)/2:fontsize=60:fontcolor=white#{enaTime}"
+      
+#
 #  dir 作成
 #
 def mkdirs( *dirs )
   dirs.each do |dir|
-    unless FileTest.directory?(dir)
-      FileUtils.mkpath( dir )
-      log( "mkdir #{dir}" ) if $opt.debug == true
+    if dir != nil and dir != ""
+      unless FileTest.directory?(dir)
+        FileUtils.mkpath( dir )
+        log( "mkdir #{dir}" ) if $opt.debug == true
+      end
     end
   end
 end

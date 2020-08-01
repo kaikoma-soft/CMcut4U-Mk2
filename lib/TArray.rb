@@ -45,7 +45,7 @@ class TArray < Array
             when A_ON   then "on"
             when HON    then "HonPen"
             when CM     then "CM"
-            when NONE   then ""
+            when NONE   then "None"
             when LOGO   then "Logo"
             when SOD    then "start"
             when EOD    then "EOD"
@@ -216,14 +216,13 @@ class TArray < Array
       fp.each_line do |line|
         next if line =~ /^#/
         if line =~ /^([\d:\.]+)\s+(\w+)\s+(.*)/
-          time = $1
-          type = $2
-          txt  = $3
+          time,type,txt = $1,$2,$3
           type = case type
                  when "CM"     then CM
                  when "HonPen" then HON
                  when "EOD"    then EOD
                  when "Logo"   then LOGO
+                 when "None"   then NONE
                  else
                    p type
                    raise

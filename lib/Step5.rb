@@ -130,13 +130,7 @@ class Step5
     i = 1
     cmList = []
     honList = []
-    delogo_time = nil
 
-    if @para.fpara.delogo == true
-      delogo_time = TArray.new
-      delogo_time.load( @para.logoMarkfn )
-    end
-    
     chap.each do |c|
       next if c.attr != HON and c.attr != CM
 
@@ -189,19 +183,8 @@ class Step5
         env[:WIDTH] = sprintf("%.3f", c.w + fft )
       end
 
-      ss = c.t
-      if delogo_time != nil and c.attr == HON
-        tmp2 = []
-        delogo_time.each do |t|
-          next if t.attr == EOD
-          s = t.t - ss - 2
-          next if s < 0
-          tmp2 << sprintf("between(t,%.1f,%.1f)",s , s + t.w + 4 )
-        end
-        if tmp2.size > 0
-          tmp = "delogo=" + @para.fpara.delogo_pos + ":enable="
-          env[ :VFOPT ] << tmp + "'" + tmp2.join("+") + "'"
-        end
+      if  c.attr == HON
+        env[ :VFOPT ] += make_rmlogo_vf( @para, c.t, c.w )
       end
 
       if @para.fpara.ffmpeg_vfopt != nil

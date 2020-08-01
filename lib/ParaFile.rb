@@ -20,18 +20,20 @@ class ParaFile
                   :dirSkip,
                   :cmcut_skip,
                   :terminator_stime,
-                  :delogo,
-                  :delogo_pos,
-                  :delogo_time,
                   :sponsor_search,
                   :cmSec,
                   :tomp4,
                   :containerConv,
                   :sponor_10sec,
                   :deInterlace,
-                  :subadj
+                  :subadj,
+                  :rmlogo_time,
+                  :rmlogofn,
+                  :rmlogo_detect,
+                  :rmlogo_blur
 
   def initialize( )
+    @rmlogofn = nil             # ロゴ除去用マスクファイル名
     @cmlogofn = []              # CM ロゴファイル名
     @logofn   = []              # 本編ロゴファイル名
     @duration = []              # 時間の期待値
@@ -45,9 +47,7 @@ class ParaFile
     @dirSkip        = false     # このディレクトリは無視する
     @cmcut_skip     = false     # CMカット処理は行わず、丸ごと
     @terminator_stime = nil     # 区切りの無音期間の長さ
-    @delogo         = false     # delogo の処理を行う
-    @delogo_pos     = nil       # delogo の座標指定
-    @delogo_time    = nil       # ロゴの存在する時間データ。解析結果から設定
+    @rmlogo_time    = nil       # ロゴの存在する時間データ。解析結果から設定
     @cmSec          = []        # n秒のセクションを強制的にCM にする。
     @tomp4          = nil       # mp4 エンコードスクリプトの指定
     @sponsor_search = false     # CMの中から提供を探して印を付ける。
@@ -55,6 +55,8 @@ class ParaFile
     @sponor_10sec   = false     # 本編直後にある 10秒のセクションは提供とみなす
     @deInterlace    = nil       # インタレース解除
     @subadj         = 0.0       # 字幕のタイミング調整(秒)
+    @rmlogo_detect  = false     # ロゴを検出した時だけロゴ除去フィルターを掛ける
+    @rmlogo_blur    = RmLogoBlurDefault # ぼかしフィルター
   end
 
   def createSymList( name,min,max )
@@ -127,11 +129,7 @@ class ParaFile
     else
       @terminator_stime = 2.0
     end
-    @delogo  = !!lt[:delogo ]   # delogo の処理を行う
-    if lt[ :delogo_pos ] != nil
-      @delogo_pos = lt[ :delogo_pos ] # delogo の座標指定
-    end
-    @delogo_time = nil          # ロゴの存在する時間データ。解析結果から設定
+    @rmlogo_time = nil          # ロゴの存在する時間データ。解析結果から設定
   end
 
   
@@ -165,6 +163,8 @@ class ParaFile
         delWork( :logo, para ) if vdiff( old, self, "@cmlogofn")
         delWork( :ss  , para ) if vdiff( old, self, "@position")
         delmp4( para.workd )   if vdiff( old, self, "@tomp4" )
+        delmp4( para.workd )   if vdiff( old, self, "@rmlogo" )
+        delmp4( para.workd )   if vdiff( old, self, "@rmlogo_detect" )
 
         ["@monolingual",
          "@audio_only",
@@ -240,7 +240,9 @@ class ParaFile
     @audio_only    = true    if @audio_only == nil
     @monolingual   = 0       if @monolingual == nil 
     @subadj        = 0.0     if @subadj == nil
-    
+    @rmlogo_detect = false   if @rmlogo_detect == nil
+    @rmlogo_blur   = RmLogoBlurDefault if @rmlogo_blur == nil
+
     #@chapNum   << 10
     #@duration  << 1440
 

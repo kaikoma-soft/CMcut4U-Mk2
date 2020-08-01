@@ -102,6 +102,19 @@ class Para
     return false
   end
 
+  #
+  # スクリーンショットを作るか (true=作る)
+  #
+  def screenS?()
+    if @fpara.audio_only != true or
+       ( @fpara.rmlogofn != nil and
+         @fpara.rmlogofn != "" and
+         @fpara.rmlogo_detect == true )
+      return true
+    end
+    return false
+  end
+  
   def setLogofn( str )
     @logofn = sprintf("%s/%s",LogoDir,str )
     return nil unless test(?f,@logofn )

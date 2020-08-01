@@ -7,39 +7,21 @@
 class ParaGUI
 
   #
-  #  logoファイルのリストアップ
-  #
-  def listLogoDir()
-    files = [  ]
-    if test( ?d , LogoDir )
-      Find.find( LogoDir ) do |f|
-        if f =~ /\.(jpg|png|gif)$/
-          fname = File.basename( f )
-          next if fname =~ /^logo-\d+\.png/
-          fname = f.sub(/#{LogoDir}/,'')
-          fname.sub!(/^\//,'')
-          files << fname
-        end
-      end
-    end
-    files << LogoNotUseTxt    
-    files
-  end
-
-  #
   #  listLogoDir() の再帰版(シンボリックリンクを追う)
   #
-  def listLogoDir2( dir )
+  def listLogoDir( dir, base = nil )
     files = []
+    base = dir if base == nil
+    
     Dir.entries( dir ).sort.each do |fname|
       next if fname == "." or fname == ".."
       path = dir + "/" + fname
       if FileTest.directory?( path ) 
-        files += listLogoDir2( path )
+        files += listLogoDir( path, base )
       elsif test( ?f , path )
         if fname =~ /\.(jpg|png|gif)$/
           next if fname =~ /^logo-\d+\.png/
-          fname = path.sub(/#{LogoDir}/,'')
+          fname = path.sub(/#{base}/,'')
           fname.sub!(/^\//,'')
           files << fname
         end
@@ -47,6 +29,7 @@ class ParaGUI
     end
     files
   end
+
   
   #
   #  TS ディレクトリのリストアップ
@@ -92,6 +75,7 @@ class ParaGUI
     # 空の状態に初期化
     ws[:hlf].set_active(-1)
     ws[:clf].set_active(-1)
+    ws[:rmlogo].set_active(-1)
     ws[:lp_tr].active = true
     10.times.each do |n|
       ws[:cs][n].set_text("")
@@ -116,6 +100,7 @@ class ParaGUI
       sym = cmTime2sym( time )
       ws[sym].active=(false)
     end
+    ws[:opt_rmlogo_detect].active=(false)
 
     
     # 値をセット
@@ -145,6 +130,27 @@ class ParaGUI
             ws[:clf].set_active(n)
           end
         end
+
+        n = m = 0
+        if @fpara.rmlogofn != nil and @fpara.rmlogofn != ""
+          tmp = @fpara.rmlogofn.sub(/#{RmLogoDir}\//,'')
+          n = m if ( m = @rmlogoFiles.index( tmp )) != nil
+        elsif ( m = @rmlogoFiles.index( RmLogoNotUseTxt )) != nil 
+          n = m
+        end
+        ws[:rmlogo].set_active(n)
+
+        n = m = 0
+        if @fpara.rmlogo_blur != nil
+          RmLogoBlurList.each_pair do |k,v|
+            if @fpara.rmlogo_blur == k
+              n = m
+              break
+            end
+            m += 1
+          end
+        end
+        ws[:rmlogo_blur].set_active(n)
         
         if @fpara.position != nil
           case @fpara.position
@@ -229,6 +235,10 @@ class ParaGUI
         if ( n = DeInterlaceList.index( fn )) != nil
           ws[:deInterlace].set_active(n)
         end
+
+        if @fpara.rmlogo_detect
+          ws[:opt_rmlogo_detect].active=(true)
+        end
         
       end
     end
@@ -257,6 +267,21 @@ class ParaGUI
       @fpara.cmlogofn = [ cmlogofn ]
     end
 
+    rmlogofn = ws[:rmlogo].active_text
+    if RmLogoNotUseTxt == rmlogofn 
+      @fpara.rmlogofn = nil
+    else
+      @fpara.rmlogofn = rmlogofn
+    end
+
+    tmp = ws[:rmlogo_blur].active_text
+    if RmLogoNotUseTxt == tmp
+      @fpara.rmlogo_blur = :null
+    else
+      key = RmLogoBlurList.key( tmp )
+      @fpara.rmlogo_blur = key
+    end
+    
     if ws[:lp_tr].active?
       @fpara.position = "top-right"
     elsif  ws[:lp_tl].active?
@@ -280,6 +305,7 @@ class ParaGUI
     @fpara.cmcut_skip = ws[:opt_cs].active?  ? true : false
     @fpara.nhk_type = ws[:opt_nhk].active?     ? true : false
     @fpara.fadeOut = ws[:opt_fadeout].active?   ? true : false
+    @fpara.rmlogo_detect = ws[:opt_rmlogo_detect].active?  ? true : false
 
     @fpara.monolingual = 0 if ws[:opt_mono0].active?
     @fpara.monolingual = 1 if ws[:opt_mono1].active?

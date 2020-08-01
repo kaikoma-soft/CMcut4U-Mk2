@@ -11,6 +11,7 @@ class ParaGUI
 
   DuraN  = 10                   # duration の設定数
   LogoNotUseTxt = "使用しない (丸ごと１本 or 音声のみで処理する or CM)"
+  RmLogoNotUseTxt = "使用しない"
   NoInterlace   = "しない"
   
   def initialize( dir = nil, para: nil )
@@ -32,10 +33,17 @@ class ParaGUI
     #tsFiles = listTSdir( $opt.indir, false )
     dirs = tsDir( $opt.indir )
 
-    @logoFiles =  listLogoDir2( LogoDir )
-    @logoFiles << LogoNotUseTxt    
+    @logoFiles =  listLogoDir( LogoDir )
+    @logoFiles << LogoNotUseTxt
+
+    @rmlogoFiles = [ RmLogoNotUseTxt ]
+    if RmLogoDir != nil
+      listLogoDir( RmLogoDir ).each do |fn|
+        @rmlogoFiles << fn if fn =~ /(\d+)x(\d+)\+(\d+)\+(\d+)\./
+      end
+    end
     @shellFiles = listShells()
-    #dirs = tsFiles.keys.sort
+
     Signal.trap( :INT ) { exit() }
     @tblarg = [ Gtk::FILL,Gtk::EXPAND, 2, 2 ]
     ws = {}
@@ -344,6 +352,54 @@ class ParaGUI
     hbox.pack_start(label, false, true, 0)
     tbl3.attach( hbox, 0, 1, y, y+1, *@tblarg )
 
+    ###
+    y += 1
+    hbox = Gtk::HBox.new( false )
+    label = Gtk::Label.new("ロゴ除去 マスクファイル名")
+    hbox.pack_start(label, false, true, 10)
+
+    ws[:rmlogo] = Gtk::ComboBox.new
+    n = ( @rmlogoFiles.size / 25 ).to_i + 1
+    ws[:rmlogo].wrap_width = n
+    @rmlogoFiles.each do |dir|
+      ws[:rmlogo].append_text(dir)
+    end
+    hbox.pack_start(ws[:rmlogo], false, true, 10)
+    
+    tbl3.attach( hbox, 0, 1, y, y+1, *@tblarg )
+
+    
+    ###
+    y += 1
+    hbox = Gtk::HBox.new( false )
+    label = Gtk::Label.new("ロゴ除去 ぼかしフィルター")
+    hbox.pack_start(label, false, true, 10)
+
+    ws[:rmlogo_blur] = Gtk::ComboBox.new
+    n = ( RmLogoBlurList.size / 25 ).to_i + 1
+    ws[:rmlogo_blur].wrap_width = n
+    RmLogoBlurList.each_pair do |k,v|
+      v = "使用しない" if v == "null"
+      ws[:rmlogo_blur].append_text(v)
+    end
+    hbox.pack_start(ws[:rmlogo_blur], false, true, 10)
+    
+    tbl3.attach( hbox, 0, 1, y, y+1, *@tblarg )
+    
+    ###
+    y += 1
+    label = " ロゴを検出した時だけロゴ除去フィルターを掛ける"
+    ws[:opt_rmlogo_detect] = Gtk::CheckButton.new( label )
+    tbl3.attach( ws[:opt_rmlogo_detect], 0, 2, y, y+1, *@tblarg )
+
+    # ロゴ除去関連の連動
+    ws[:rmlogo].signal_connect("changed") do |widget|
+      maskfn = ws[:rmlogo].active_text
+      sw =  maskfn == RmLogoNotUseTxt ? false : true
+      ws[:opt_rmlogo_detect].set_sensitive( sw )
+      ws[:rmlogo_blur].set_sensitive( sw )
+    end
+    
     ###
     y += 1
     label = " このディレクトリは無視する"
