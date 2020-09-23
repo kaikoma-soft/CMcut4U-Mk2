@@ -3,6 +3,26 @@
 #
 
 #
+#   コンテナ変換
+#
+def containerConv( para )
+  psfn = para.psfn
+  if FileTest.size?( psfn ) == nil
+    log( "### コンテナ変換 ###")
+    env = { "INPUT" => para.tsfn,
+            "OUTPUT" => psfn,
+          }
+    exec = Libexec.new
+    exec.run( :container, env, outfn: psfn, log: para.cmcutLog  )
+    if FileTest.size?( psfn ) != nil
+      para.tsfn = psfn
+    else
+      log( "Error: コンテナ変換に失敗しました。")
+    end
+  end
+end
+
+#
 # ロゴ除去フィルター
 #
 def make_rmlogo_vf( para, ss = nil, w = nil )

@@ -125,7 +125,7 @@ class Main
         log("#{base} is hot")
         next
       end
-
+      
       if para.fpara.dirSkip == true            
         log("#{n+1}/#{flist.size} skip #{para.subdir}/#{para.fnbase2}")
         $result.incSkip()
@@ -141,7 +141,7 @@ class Main
       log("#{n+1}/#{flist.size}  #{para.subdir}/#{para.fnbase2}")
 
       mkdirs( para.workd )
-      para.tsinfo( para.workd + "/ffprobe-in.log" )
+      para.tsinfo()
       
       if $opt.ts2mp4 == true
         ts2mp4( para )
@@ -238,11 +238,11 @@ class Main
   def allmp4( para )
 
     return if alreadyProc?(para, :all ) == true and $opt.forceEnc == false
-    return if para.tsinfo == nil
+    return if para.tsinfo == nil 
     
     log("allmp4 start")
     stime = Time.now
-
+    
     if fileValid?( para.mp4fn, para.mkvfn ) == false or $opt.forceEnc == true
 
       outfn = para.mp4fn
@@ -259,7 +259,9 @@ class Main
               :H265PRESET => "",
               :MONO     => ""
             }
-      if para.fpara.monolingual == 1
+      if para.fpara.monolingual == 0
+        env[:MONO] = " -map 0:v -map 0:a "
+      elsif para.fpara.monolingual == 1
         env[:MONO] = " -af pan=mono|c0=c0 "
       elsif para.fpara.monolingual == 2
         env[:MONO] = " -ac 1 -map 0:v -map 0:1 "
@@ -282,7 +284,7 @@ class Main
 
       makePath( para.mp4fn )
       exec = Libexec.new(para.fpara.tomp4)
-      exec.run( :tomp4, env, outfn: outfn )
+      exec.run( :tomp4, env, outfn: outfn, log: para.cmcutLog)
 
       # 字幕処理
       if para.subtitle? == true

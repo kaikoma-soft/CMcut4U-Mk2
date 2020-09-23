@@ -12,7 +12,8 @@ $FFMPEG \
     -ss $SS \
     -t  $WIDTH \
     -i "$INPUT" \
-    -vf "$VFOPT" \
+    -vf $VFOPT \
+    -max_muxing_queue_size 512 \
     $MONO \
     -c:v h264_nvenc -rc vbr \
     -movflags faststart \

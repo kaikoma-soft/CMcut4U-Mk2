@@ -53,16 +53,10 @@ class ParaGUI
   #
   def listShells()
     files = [ "デフォルト" ]
-    Find.find( $opt.appdir + "/libexec" ) do |f|
-      if f =~ /\.(sh|rb)$/
-        fname = File.basename( f )
-        fname.sub!(/^\//,'')
-        files << fname
-      end
-    end
+    libexec = Libexec.new
+    files += libexec.list()
     files
   end
-
 
 
 
