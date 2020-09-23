@@ -1,4 +1,25 @@
 
+ver 1.0.0           2020/09/23
+
+  ・当初予定の機能追加が終了したので、β版からリリース版へ
+
+ver 0.4.0           2020/09/23
+
+  ・機能追加
+    * 本編／CM 判定 ユーザー定義マクロ機能の追加
+      詳細は https://kaikoma-soft.github.io/src/CMcut4U2-macro.html を参照  
+
+    * カスタマイズしたスクリプトを置くディレクトリ(libexec の代替)を指
+      定する為の定数 LIBEXE2 を導入。
+
+  ・改良
+    * PCR/DTS/RTS ラップアラウンド問題で、duration の取得に失敗した時
+      に自動的にコンテナ変換をして再取得するように。
+    * サンプルの config.rb 中の Subtitling の値を false に変更。
+      ( 意図せず字幕処理を有効にしない為)
+    * ffmpeg のオプションに -max_muxing_queue_size 512 を追加
+
+
 ver 0.3.0           2020/08/01
   ・機能追加
     * ロゴ消し機能の追加
@@ -13,6 +34,7 @@ ver 0.2.0           2020/07/10
       → パラメータ設定ダイアログに、タイミング調整用の項目を追加
       ただし制限事項あり。
       詳細は https://kaikoma-soft.github.io/src/subtitle.html を参照。
+
     * 強制的に CM にする秒数をユーザーが可変にするため、 config.rb に
       定数 ForceCmTime を導入。
 

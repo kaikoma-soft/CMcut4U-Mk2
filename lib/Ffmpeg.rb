@@ -22,38 +22,6 @@ class Ffmpeg
     system( bin, *cmd )
   end
 
-  
-  #
-  #  tmp meta情報ファイルの作成
-  #
-  def makeTmpMeta( metafn, endtime )
-    et = endtime.to_f
-    starttime = 0
-    n = 1
-    buff = [ ";FFMETADATA1","", ]
-    [ et * 0.5, et * 0.8, et * 0.9, et * 0.99, et ].each do |time|
-      if ( ( et - time ) > 5 ) or time == et
-        time = time.to_i
-        buff << "[CHAPTER]"
-        buff << "TIMEBASE=1/1"
-        buff << "START=#{starttime}"
-        buff << "END=#{time}"
-        buff << "title=chapter #{n}"
-        buff << ""
-        starttime = time
-        n += 1
-      end
-    end
-
-    File.open( metafn, "w" ) do |f|
-      buff.each do |s|
-        f.puts(s)
-      end
-    end
-    metafn
-  end
-
-
 
   #
   #  ffprob
@@ -63,7 +31,7 @@ class Ffmpeg
     logfp = nil
     r = {}
     r[ :fname ] = @tsfn
-    r[ :subtitle ] = false
+    r[ :subtitle ] = false if r[ :subtitle ] == nil
     keys = %w( width height codec_long_name duration field_order display_aspect_ratio codec_name )
     arg = [  ]
     arg += %W( -pretty -hide_banner -show_streams  #{@tsfn} )
@@ -93,12 +61,6 @@ class Ffmpeg
       end
     end
 
-    [ :duration, :duration2,  :width, :height ].each do |key|
-      if r[ key ] == nil
-        log( "Error: #{key.to_s} is nil #{@tsfn}")
-        return nil
-      end
-    end
 
     #
     #   TS の場合、誤検出を避ける為に前番組の部分を skip して再度 ffprobe
@@ -159,59 +121,7 @@ class Ffmpeg
   end
 
   
-  #
-  #  screen shot 
-  #
-  def ts2ss( opt )
-    arg = @logLevel +
-          %W( -threads #{$max_threads} -i #{@tsfn} ) +
-          %W( -r #{SS_frame_rate} -f image2 -vframes #{opt[:vf]} ) +
-          %W( -vf crop=#{opt[:w]}:#{opt[:h]}:#{opt[:x2]}:#{opt[:y2]} ) +
-          %W( -vcodec mjpeg -y #{opt[:picdir]}/ss_%05d.jpg )
-    system2( @bin, *arg )
-
-    # check
-    unless test( ?f, opt[:picdir] + "/ss_00001.jpg" )
-      mesg = "jpg file can't create"
-      log(mesg)
-      raise mesg
-    end
-  end
-
-
-  #
-  #  メタデータを追加
-  #
-  def addMeta( opt )
-    makeTmpMeta( opt[:meta], opt[:t] )
-    out2 = opt[:outfn].sub(/\.mp4$/,"-tmp.mp4")
-    arg = @logLevel + %W( -y )
-    arg += %W( -i #{opt[:outfn]} )
-    arg += %W( -i #{opt[:meta]} -map_metadata 1 )
-    arg += %W( -codec copy #{out2} )
-    system2( @bin, *arg )
-    if test( ?s, out2 )
-      File.unlink( opt[:outfn] )
-      File.rename( out2, opt[:outfn] )
-    else
-      log( "fail addMeta()" )
-    end
-  end
   
-
-  #
-  #  mp4 のカット編集
-  #
-  def mp4cut( opt )
-
-    arg = @logLevel + %W( -y )
-    arg += %W( -ss #{opt[:ss]} -t #{opt[:t]} ) if opt[:ss] != nil
-    arg += %W( -i #{@tsfn} )
-    arg += %W( -vcodec copy -acodec copy )
-    arg += %W( #{opt[:outfn]} )
-    #pp arg
-    system2( @bin, *arg )
-  end
 
 
   #
@@ -247,6 +157,16 @@ class Ffmpeg
 
   end
 
+  #
+  #  wav 変換
+  #
+  def ts2wav( opt )
+    arg = @logLevel +
+          %W( -threads #{$max_threads} -i #{@tsfn} ) +
+          %W( -vn -ac 1 -ar #{WavRatio} -acodec pcm_s16le -f wav ) +
+          %W( -y #{opt[:outfn]} ) 
+    system2( @bin, *arg )
+  end
   
 
 end

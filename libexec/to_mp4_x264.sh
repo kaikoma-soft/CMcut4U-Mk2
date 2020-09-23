@@ -10,6 +10,7 @@ $FFMPEG -loglevel $LOGLEVEL \
         -ss $SS \
         -t  $WIDTH \
         -i "$INPUT" \
+        -max_muxing_queue_size 512 \
         $MONO \
         -vcodec libx264 -acodec aac  \
         -movflags faststart \

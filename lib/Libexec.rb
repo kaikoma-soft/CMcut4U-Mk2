@@ -32,7 +32,16 @@ class Libexec
            "to_mp4.sh"
          end
 
-    path = $opt.appdir + "/libexec/" + fn
+    @exedir = $opt.appdir + "/libexec"
+    if Object.const_defined?(:LIBEXEC2) == true
+      if FileTest.directory?( LIBEXEC2 )
+        @exedir = LIBEXEC2.sub(/\/$/,'')
+      else
+        log( "Error: LIBEXEC2 のディレクトリがありません。(#{LIBEXEC2})")
+      end
+    end
+
+    path = @exedir + "/" + fn
     if FileTest.file?( path )
       if FileTest.executable?( path )
         @list[ :tomp4 ] = fn
@@ -40,12 +49,24 @@ class Libexec
     end
   end
 
+  def list
+    files = []
+    Find.find( @exedir ) do |f|
+      if f =~ /\.(sh|rb)$/
+        fname = File.basename( f )
+        fname.sub!(/^\//,'')
+        files << fname
+      end
+    end
+    files
+  end
+  
   def run( name, env, outfn: nil, args: nil, log: nil )
     
     if @list[ name ] == nil
       raise("Error: name(#{name.to_s}) not found")
     else
-      path = $opt.appdir + "/libexec/" + @list[ name ]
+      path = @exedir + "/" + @list[ name ]
       if FileTest.file?( path )
         if FileTest.executable?( path )
           if env != nil

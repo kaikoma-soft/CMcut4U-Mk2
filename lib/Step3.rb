@@ -26,7 +26,7 @@ class Step3
       Log::save( @cmlogo.dump( "CM ロゴ検出結果" ), para, "step3-2.log" )
 
       if @logo.size < 3
-        log("警告: ロゴの検出に失敗しました。")
+        log("警告: ロゴの検出に失敗しました。(#{@logo.size})")
       end
       @logo.save( para.logoMarkfn ) # logo の存在時間を格納
     end
@@ -62,6 +62,28 @@ class Step3
     proc02( "*11","開始直後の端数は CM にする。" )
     proc40( "*12","開始、終了間際の端数は CM に。"  )
     proc50( "*13","最後まで未判定のものは本編とみなす。"  )
+
+    #
+    # ユーザー定義マクロの実行
+    #
+    if para.macro != nil
+      num = 1
+      ret = []
+      para.macro.each do |tmp|
+        txt = sprintf("M%d ",num )
+        tmp2 = tmp.proc( @sect, txt )
+        if tmp2.size > 0
+          regDescription(txt, "ユーザー定義マクロ \"#{tmp.line}\"" )
+          ret += tmp2
+        end
+        num += 1
+      end
+      ret.each do |tmp|
+        s, type, txt = tmp
+        s.attr = type
+        s.addtxt( txt )
+      end
+    end
     
     buf = section.dump( "セクション毎の本編／CM 判定結果" )
     buf << ""

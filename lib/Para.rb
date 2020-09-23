@@ -35,7 +35,8 @@ class Para
                 :step4okfn,     # Step4 が OK の場合に touch
                 :subtitlefn,    # 字幕(ass) ファイル名
                 :mkvfn,         # 字幕が有効な場合の出力ファイル名(mp4fn相当)
-                :tsinfoData     # tsinfo の結果格納
+                :tsinfoData,    # tsinfo の結果格納
+                :macro          # CM/本編のマクロ定義
   
   
   def initialize( apath: nil, base: nil )
@@ -86,6 +87,8 @@ class Para
     @step4okfn = @workd + "/step4.ok"
     @subtitlefn  = @workd + "/subtitle.ass"
 
+    readMacroFile()
+    
   end
 
   #
@@ -121,17 +124,34 @@ class Para
     @logofn
   end
 
+  def setTsinfo(tmp)
+    @tsinfoData = tmp
+  end
 
   #
   #  TSの諸元取得
   #
   def tsinfo( log = nil )
+
     if @tsinfoData == nil and @tsinfoFail == nil
-      @tsinfoData = Ffmpeg.new( @tsfn ).getTSinfo( log )
-      if @tsinfoData == nil
-        @tsinfoFail = true      # 取得に失敗
+      tmp = Ffmpeg.new( @tsfn ).getTSinfo( @workd + "/ffprobe-in.log" )
+      if tmp[:duration] == nil 
+        log( "警告: duration の取得に失敗しました。コンテナ変換を行います。")
       end
+      if @fpara.containerConv == true or tmp[:duration] == nil 
+        containerConv( self )
+        tmp2 = Ffmpeg.new( psfn ).getTSinfo( @workd + "/ffprobe-in-mp4.log" )
+        if tmp2[:duration] == nil 
+          log( "Error: duration の取得に失敗しました。")
+          @tsinfoFail = true      # 取得に失敗
+          return nil
+        end
+        tmp[:duration] = tmp2[:duration]
+        tmp[:duration2] = tmp2[:duration2]
+      end
+      @tsinfoData = tmp
     end
+
     return @tsinfoData
   end
 
@@ -152,6 +172,19 @@ class Para
     return @workd + "/" + @fnbase + ".mp4"
   end
 
+  #
+  # パラメータファイルの読み込み
+  #
+  def readMacroFile()
+    @macro = nil
+    macrofn = sprintf("%s/%s/macro.txt",@basedir,@subdir )
+    if FileTest.size?( macrofn ) != nil
+      @macro  = Macro.new
+      @macro.load( macrofn )
+    end
+    return @macro
+  end
+  
 end
   
 

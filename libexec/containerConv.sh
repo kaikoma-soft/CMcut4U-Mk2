@@ -9,7 +9,9 @@ $FFMPEG \
     -hide_banner -y \
     -analyzeduration 100M -probesize 100M \
     -i "$INPUT" \
-    -c:v copy -c:a copy -map 0:v -map 0:a -bsf:a aac_adtstoasc \
+    -max_muxing_queue_size 512 \
+    -c:v copy -c:a copy  -map 0:v -map 0:a:0 \
+    -bsf:a aac_adtstoasc \
     -bufsize 1835k -fflags genpts -f mp4 \
     "$OUTPUT"
 

@@ -30,6 +30,7 @@ require_relative 'ChapFix.rb'
 require_relative 'Step3des.rb'
 require_relative 'Result.rb'
 require_relative 'ConvSubTT'
+require_relative 'Macro.rb'
 
 if Array.method_defined?(:sum) == false
   require_relative 'ArraySum.rb'

@@ -223,6 +223,7 @@ class Fixgui
 
       t = Thread.new do           # 待機スレッド
         @para.readParaFile( )
+        @para.readMacroFile()
         Step1.new.run(@para)                         # step1: 前処理
         section = Step2.new.run(@para)               # step2: 解析 音声
         section = Step3.new.run( @para, section )    # step3: 解析 logo
