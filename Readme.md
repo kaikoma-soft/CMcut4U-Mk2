@@ -61,6 +61,6 @@
 
 ## 詳細
 インストール方法等の詳細は、
-[GitHub Pages](https://kaikoma-soft.github.io/CMcut4U2.html)
+[GitHub Pages](https://kaikoma-soft.github.io/src/CMcut4U2.html)
 を参照して下さい。
 
