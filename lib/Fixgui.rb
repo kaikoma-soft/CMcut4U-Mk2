@@ -163,8 +163,11 @@ class Fixgui
     hbox2.pack_start(bon4, false, true, 5)
     bon4.signal_connect("clicked") do
       Thread.new do
-        openMpv( @var, true )
-        cleanUp()
+        begin
+          openMpv( @var, true )
+          cleanUp()
+        rescue
+        end
       end
       window.destroy
       Gtk.main_quit

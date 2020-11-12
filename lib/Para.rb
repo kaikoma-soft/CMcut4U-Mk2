@@ -139,15 +139,18 @@ class Para
         log( "警告: duration の取得に失敗しました。コンテナ変換を行います。")
       end
       if @fpara.containerConv == true or tmp[:duration] == nil 
-        containerConv( self )
-        tmp2 = Ffmpeg.new( psfn ).getTSinfo( @workd + "/ffprobe-in-mp4.log" )
-        if tmp2[:duration] == nil 
-          log( "Error: duration の取得に失敗しました。")
-          @tsinfoFail = true      # 取得に失敗
+        if containerConv( self ) == true
+          tmp2 = Ffmpeg.new( psfn ).getTSinfo( @workd + "/ffprobe-in-mp4.log" )
+          if tmp2[:duration] == nil 
+            log( "Error: duration の取得に失敗しました。")
+            @tsinfoFail = true      # 取得に失敗
+            return nil
+          end
+          tmp[:duration] = tmp2[:duration]
+          tmp[:duration2] = tmp2[:duration2]
+        else
           return nil
         end
-        tmp[:duration] = tmp2[:duration]
-        tmp[:duration2] = tmp2[:duration2]
       end
       @tsinfoData = tmp
     end

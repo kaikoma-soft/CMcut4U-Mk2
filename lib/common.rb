@@ -18,8 +18,10 @@ def containerConv( para )
       para.tsfn = psfn
     else
       log( "Error: コンテナ変換に失敗しました。")
+      return false
     end
   end
+  return true
 end
 
 #
