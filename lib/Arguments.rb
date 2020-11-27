@@ -132,7 +132,7 @@ class Arguments
       op.on('-c', '--co', '自動判定処理のみ') do
         @co = !@co
       end
-      op.on('-n', '--nc', 'キャッシュデータを使わない') do
+      op.on('-N', '--nc', 'キャッシュデータを使わない') do
         @noCache = !@noCache
       end
       op.on('-f', '--fix', 'チャプター修正ダイアログの起動') do
