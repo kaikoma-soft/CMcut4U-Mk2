@@ -208,6 +208,16 @@ class Fixgui
   end
 
   #
+  #  gtk のイベント処理
+  #
+  def gtkEventProc()
+    while (Gtk.events_pending?)
+      Gtk.main_iteration
+    end
+  end
+      
+  
+  #
   #   計算
   #
   def calc( para, parent )
@@ -216,23 +226,25 @@ class Fixgui
       # ダイアログの表示
       d = Gtk::Dialog.new( nil, parent, Gtk::Dialog::MODAL)
       label = Gtk::Label.new("  ***  計算中  ***  ")
-      label.show
       d.vbox.pack_start(label, true, true, 30)
       d.show_all
       statmesg( "計算中" )
-
+      
       t = Thread.new do           # 待機スレッド
+        t1 = Time.now
         @para.readParaFile( )
         @para.readMacroFile()
         Step1.new.run(@para)                         # step1: 前処理
         section = Step2.new.run(@para)               # step2: 解析 音声
         section = Step3.new.run( @para, section )    # step3: 解析 logo
-
         readChap( para, parent )
 
-        statmesg( "計算終了" )
+        tw = 0.8 - ( Time.now - t1 ).to_f
+        sleep( tw ) if tw > 0                        # 最低表示期間
         d.destroy
       end
+      gtkEventProc() while t.join( 0.1 ) == nil
+      statmesg( "計算終了" )
     end
   end
   
