@@ -36,8 +36,8 @@ class Para
                 :subtitlefn,    # 字幕(ass) ファイル名
                 :mkvfn,         # 字幕が有効な場合の出力ファイル名(mp4fn相当)
                 :tsinfoData,    # tsinfo の結果格納
-                :macro          # CM/本編のマクロ定義
-  
+                :macro,         # CM/本編のマクロ定義
+                :lockf          # ロック用ファイル
   
   def initialize( apath: nil, base: nil )
     @tsfn  = apath                 # TS file name
@@ -82,6 +82,7 @@ class Para
     @logoMarkfn= @workd + "/logoMark.log"
     @cached    = @workd + "/Cache"
     @step3desfn= @workd + "/Cache/s3des.yaml"
+    @lockf     = @workd + "/.lock"
     @cutSkip   = false
     @step4result = false
     @step4okfn = @workd + "/step4.ok"

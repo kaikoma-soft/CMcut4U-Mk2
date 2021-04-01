@@ -155,9 +155,13 @@ class Main
         end
       else
         if $opt.co == false
-          return if lock{ cmcut( para ) } == false
+          return if lock{
+            lock( para.lockf, para.fnbase2 ) {
+              cmcut( para )
+            }
+          } == false
         else
-          cmcut( para )
+          lock( para.lockf, para.fnbase2 ) { cmcut( para ) }
         end
       end
     end
@@ -297,6 +301,10 @@ class Main
       
     end
 
+    if FileTest.zero?( para.mkvfn ) or FileTest.zero?( para.mp4fn )
+      log("Error: output file is ZERO")
+    end
+    
     lap = Time.now - stime 
     log("end   #{lap.round(2).to_s}秒\n")
   end

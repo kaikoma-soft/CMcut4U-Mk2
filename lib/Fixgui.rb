@@ -182,10 +182,10 @@ class Fixgui
                set_bg(Gtk::STATE_NORMAL, 0xffff, 0xffff,0xffff),
       :br => Gtk::Style.new.
                set_fg(Gtk::STATE_NORMAL, 0, 0, 0).
-               set_bg(Gtk::STATE_NORMAL, 0xffff, 0xf400,0xf400),
+               set_bg(Gtk::STATE_NORMAL, 0xffff, 0xe000,0xe000),
       :bg => Gtk::Style.new.
                set_fg(Gtk::STATE_NORMAL, 0, 0, 0).
-               set_bg(Gtk::STATE_NORMAL, 0xf400, 0xffff,0xf400),
+               set_bg(Gtk::STATE_NORMAL, 0xe000, 0xffff,0xe000),
       :gg => Gtk::Style.new.
                set_fg(Gtk::STATE_NORMAL, 0xb000, 0xb000, 0xb000).
                set_bg(Gtk::STATE_NORMAL, 0xb000, 0xb000, 0xb000),
