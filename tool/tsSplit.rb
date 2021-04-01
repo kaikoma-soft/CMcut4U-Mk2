@@ -2,25 +2,20 @@
 # -*- coding: utf-8 -*-
 #
 #   TSファイルを 指定した秒数で分割する。 (デフォルト)
-#           又は,一定の無音期間で分割する ( --sd )
+#           又は,一定の無音期間を検出して 2stepで分割する ( --sd1,--sd2 ) 
 #
-require 'optparse'
-require 'fileutils'
-require 'pp'
 require 'benchmark'
+require 'optparse'
+require 'nkf'
+require 'yaml'
 require 'wav-file'
 
-$: << ( base = File.dirname( $0 ))
-$: << ( base2 = File.dirname( base ))
-$: << base2 + "/lib"
-#pp $:
-require "const.rb"
-require "common.rb"
-require 'ffprob.rb'
-require "Ffmpeg.rb"
+Version = "1.0.0"
+WavRatio= 4410
 
-
-
+#
+#   無音期間の抽出
+#
 def wavAnalysis( wavfn: nil ,wavratio: 4410, th: 5.0 )
 
   return if wavfn == nil or ! test( ?f, wavfn )
@@ -58,12 +53,12 @@ def wavAnalysis( wavfn: nil ,wavratio: 4410, th: 5.0 )
           if ( f - zs ) > th2   # th 秒以上
             lap = ""
             if prev != nil
-              lap = "(" + f2min( f - prev,1 ) + ")"
+              lap = "(" + f2min( f - prev,1, wavratio ) + ")"
             end
             mid = (f + zs ) / 2
             w =  ( f - zs ).to_f / wavratio
             printf("%3d %s - %s - %s  %5.1f  %s\n",
-                   count,f2min( zs,1), f2min( mid,1), f2min( f,1), w,lap)
+                   count,f2min( zs,1,wavratio), f2min( mid,1,wavratio), f2min( f,1,wavratio), w,lap)
             r << [ zs ,mid, f, w ]
             count += 1
             prev = f
@@ -79,24 +74,27 @@ def wavAnalysis( wavfn: nil ,wavratio: 4410, th: 5.0 )
   r
 end
 
-
+#
+#  無音データから、閾値を指定して期間の算出
+#
 def search( data, th, wavratio: 4410 )
   r = []
   count = 1
   prev = nil
+
   data.each do |tmp|
     ( ts, tm, te, w ) = tmp
     if w > th 
       lap = ""
       if prev != nil
         if $opt[:c] == :mid 
-          lap = "(" + f2min( tm - prev,1 ) + ")"
+          lap = "(" + f2min( tm - prev,1, wavratio) + ")"
         else
-          lap = "(" + f2min( te - prev,1 ) + ")"
+          lap = "(" + f2min( te - prev,1, wavratio ) + ")"
         end
       end
       printf("%3d %s - %s - %s  %5.1f  %s\n",
-             count,f2min( ts,1), f2min( tm,1), f2min( te,1), w,lap)
+             count,f2min( ts,1, wavratio), f2min( tm,1, wavratio), f2min( te,1, wavratio), w,lap)
       count += 1
       if $opt[:c] == :mid 
         prev = tm
@@ -111,8 +109,9 @@ def search( data, th, wavratio: 4410 )
 end
 
 
+
 #
-#   分割
+#   TSの分割
 #
 def  tssplit( input, sdata )
 
@@ -124,7 +123,9 @@ def  tssplit( input, sdata )
   count = $opt[:n]
   sdata.each do |tmp|
     of = sprintf("%s #%02d%s",output,count,ext)
-    cmd = %W(  -loglevel fatal -hide_banner -ss #{tmp[0].to_s} -i )
+    stime = tmp[0]
+    stime += $opt[:shift] if stime != 0
+    cmd = %W(  -loglevel fatal -hide_banner -ss #{stime.to_s} -i )
     cmd << input
     cmd += %W( -t #{tmp[1].to_s} -vcodec copy -acodec copy )
     cmd << of
@@ -136,6 +137,45 @@ def  tssplit( input, sdata )
     count += 1
   end
 end
+
+#
+#  ffprobe の実行
+#
+def ffprobe( input )
+
+  key = %w( codec_long_name duration  time_base )
+
+  r = {}
+  r[ :fname ] = input
+
+  IO.popen( "ffprobe -pretty -hide_banner -show_streams \"#{input}\" 2>&1 " ) do |fp|
+    fp.each_line do |line|
+      line = NKF::nkf("-w",line.chomp)
+
+      key.each do |k|
+        if line =~ /^#{k}=(.*)/
+          if $1 != "N/A"
+            r[ k.to_sym ] = $1 if r[ k.to_sym ] == nil
+          end
+        elsif line =~ /^\s+Duration: (.*?),/
+          r[ :duration ] = $1 if r[ :duration ] == nil
+        end
+      end
+    end
+  end
+
+  if r[:duration] != nil
+    if r[:duration] =~ /(\d):(\d+):(\d+)/
+      r[:duration2] = $1.to_i * 3600 + $2.to_i * 60 + $3.to_i
+    end
+  end
+
+  if r[:time_base] != nil
+    r[:ratio] = r[ :time_base ].sub(/1\//,'').to_i
+  end
+  r
+end
+
 
 
 #
@@ -173,6 +213,44 @@ def system2( bin, *cmd )
 end
 
 
+#
+#  wav 変換
+#
+def ts2wav( tsfn, outfn )
+  arg = %W( -i #{tsfn} ) +
+        %W( -vn -ac 1 -ar #{WavRatio} -acodec pcm_s16le -f wav ) +
+        %W( -y #{outfn} ) 
+  system2( "ffmpeg", *arg )
+end
+
+
+
+def usage()
+  pname = File.basename($0)
+    usageStr = <<"EOM"
+Usage: #{pname} [Options]...  ts-file
+
+  Options:
+    -t, --time n          分割する秒数
+    -n, --num n           ナンバリングの開始番号
+    -s, --skip n          先頭をずらす(秒)
+    -S, --shift n         先頭以外の切り出し時間をずらす(秒)
+    -m, --margin n        切り出し時の糊しろ(秒)
+        --sd1             無音期間で分割 step1
+        --sd2             無音期間で分割 step2
+        --th n            無音期間の閾値
+        --ts n            無音期間の閾値の探索開始値
+        --te n            無音期間の閾値の探索終了値
+        --tw n            無音期間の閾値の探索step値
+    -e, --end             無音期間の切り出し方 終端
+    -M, --mid             無音期間の切り出し方 真中
+        --help            Show this help
+
+#{pname} ver #{Version}
+EOM
+    print usageStr
+    exit 1
+end
 
 #
 #  main 
@@ -188,25 +266,28 @@ $opt = {
   :m   => 1.0,                  # マージン(秒)
   :th  => 5.0,                  # 検出する無音期間(秒)
   :ts  => 2.0,                  # 探索開始 (--sd1指定時)
-  :te  => 6.0,                  # 探索終了 (--sd1指定時)
+  :te  => 8.0,                  # 探索終了 (--sd1指定時)
   :tw  => 1.0,                  # 探索幅   (--sd1指定時)
   :c   => :end,                 # 切り出し方 (:mid = 真ん中、:end = 端 )
+  :shift => 0.0,                # 切り出し時間をずらす(秒)
 }
 
 OptionParser.new do |opt|
-  opt.on('-t n') { |v| $opt[:t] = v.to_i }
-  opt.on('-n n') { |v| $opt[:n] = v.to_i }
-  opt.on('-s n') { |v| $opt[:s] = v.to_i }
-  opt.on('-m n') { |v| $opt[:m] = v.to_f }
-  opt.on('-d')   { |v| $opt[:d] = true }
-  opt.on('--sd1')  { |v| $opt[:sd] = 1 }
-  opt.on('--sd2')  { |v| $opt[:sd] = 2 }
-  opt.on('--th n') { |v| $opt[:th] = v.to_f }
-  opt.on('--ts n') { |v| $opt[:ts] = v.to_f }
-  opt.on('--te n') { |v| $opt[:te] = v.to_f }
-  opt.on('--tw n') { |v| $opt[:tw] = v.to_f }
-  opt.on('-e')     { |v| $opt[:c] = :end }
-  opt.on('-M')     { |v| $opt[:c] = :mid }
+  opt.on('-t n','--time n')   { |v| $opt[:t] = v.to_i }
+  opt.on('-n n','--num')      { |v| $opt[:n] = v.to_i }
+  opt.on('-s n','--skip n')   { |v| $opt[:s] = v.to_i }
+  opt.on('-m n','--margin n') { |v| $opt[:m] = v.to_f }
+  opt.on('-d','--debug')      { |v| $opt[:d] = true }
+  opt.on('--sd1')             { |v| $opt[:sd] = 1 }
+  opt.on('--sd2')             { |v| $opt[:sd] = 2 }
+  opt.on('--th n')            { |v| $opt[:th] = v.to_f }
+  opt.on('--ts n')            { |v| $opt[:ts] = v.to_f }
+  opt.on('--te n')            { |v| $opt[:te] = v.to_f }
+  opt.on('--tw n')            { |v| $opt[:tw] = v.to_f }
+  opt.on('-e','--end')        { |v| $opt[:c] = :end }
+  opt.on('-M','--mid')        { |v| $opt[:c] = :mid }
+  opt.on('-S n','--shift n')  { |v| $opt[:shift] = v.to_f }
+  opt.on('--help')            { usage() }
   opt.parse!(ARGV)
 end
 
@@ -223,15 +304,13 @@ end
 #  無音期間でカットの前処理
 #
 if $opt[:sd] != false
-  if infile =~ /\.ts$/
+  if infile =~ /\.(ts|mp4|ps)$/
     # wav に変換
-    wavfn = File.basename(infile).sub(/\.ts$/,".wav" )
+    wavfn = File.basename(infile).sub(/\.(ts|ps|mp4)$/,".wav" )
     if test(?f, wavfn )
       printf("file already exists %s\n",wavfn )
     else
-      ff = Ffmpeg.new( infile )
-      opt = { :outfn => wavfn }
-      ff.ts2wav( opt )
+      ts2wav( infile, wavfn )
     end
     if test(?f, wavfn )
       wav = ffprobe( wavfn )
@@ -264,13 +343,13 @@ if wavfn != nil
     $opt[:ts].step( $opt[:te], $opt[:tw])  do |th|
       printf("--th %.1f\n",th.round(1) )
       printf(" No    start        mid           end     width      lap\n")
-      search( data, th )
+      search( data, th, wavratio: wav[:ratio] )
       puts("")
     end
     puts("--sd2 と --th X.X を指定して、再度実行して下さい。")
     exit
   elsif $opt[:sd] == 2
-    data2 = search( data, $opt[:th] )
+    data2 = search( data, $opt[:th], wavratio: wav[:ratio] )
     st = 0
     data2 << wav[:duration2] if data2.size > 0
     data2.each_with_index do |d,n|

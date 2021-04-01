@@ -153,7 +153,7 @@ def log( str )
     end
   end
 
-  if $opt.chkng == false
+  if $opt != nil and $opt.chkng == false
     puts( txt )
   end
 end
@@ -162,23 +162,23 @@ end
 #  
 #  排他制御
 #
-def lock()
+def lock( lockf = LockFile, pname = Pname )
 
   unless FileTest.directory?( $opt.workdir )
     FileUtils.mkpath( $opt.workdir )
   end
   
-  File.open( LockFile, File::RDWR|File::CREAT, 0644) do |fl|
+  File.open( lockf, File::RDWR|File::CREAT, 0644) do |fl|
     if fl.flock(File::LOCK_EX|File::LOCK_NB) == false
-      puts("Error: #{Pname} locked\n")
+      puts("Error: #{pname} locked\n")
       return false
     else
       yield
     end
   end
-  if test(?f, LockFile )
+  if test(?f, lockf )
     #puts( "lock file delete")
-    File.unlink( LockFile )
+    File.unlink( lockf )
   end
   true
 end
