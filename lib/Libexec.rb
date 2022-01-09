@@ -12,7 +12,7 @@ class Libexec
       :sceneC    => "sceneChanges.sh",
       :screenS   => "screenShot.sh",
       :tojpg     => "to_jpg.sh",
-      :logoana   => "logoAnalysisSub.py",
+      :logoana   => [ PYTHON_BIN, "logoAnalysisSub.py" ],
       :container => "containerConv.sh",
       :concat    => "concat.sh",
       :getSubtitle => "to_srt.sh",
@@ -62,11 +62,21 @@ class Libexec
   end
   
   def run( name, env, outfn: nil, args: nil, log: nil )
-    
+
     if @list[ name ] == nil
       raise("Error: name(#{name.to_s}) not found")
     else
-      path = @exedir + "/" + @list[ name ]
+      if @list[ name ].class == Array
+        path = @list[ name ][0]
+        arg  = @exedir + "/" + @list[ name ][1]
+        if args != nil
+          args.unshift( arg )
+        else
+          args = [ arg ]
+        end
+      else
+        path = @exedir + "/" + @list[ name ]
+      end
       if FileTest.file?( path )
         if FileTest.executable?( path )
           if env != nil
@@ -83,7 +93,6 @@ class Libexec
           
           $workFile << outfn if outfn != nil
           st = Time.now
-          #system( path, *args )
           Open3.popen3( path, *args ) do |i, o, e, t|
             i.close
             begin

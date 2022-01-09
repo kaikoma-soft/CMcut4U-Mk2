@@ -36,6 +36,8 @@ class Fixgui
       :x  => 0,                     # window position x
       :y  => 0,                     # window position y
     }
+    @opt[:x] = FixguiPosition[:x] if FixguiPosition[:x] != nil
+    @opt[:y] = FixguiPosition[:y] if FixguiPosition[:y] != nil
 
     #
     # 前準備
@@ -162,13 +164,8 @@ class Fixgui
     bon4 = Gtk::Button.new("終了")
     hbox2.pack_start(bon4, false, true, 5)
     bon4.signal_connect("clicked") do
-      Thread.new do
-        begin
-          openMpv( @var, true )
-          cleanUp()
-        rescue
-        end
-      end
+      openMpv( @var, true )
+      cleanUp()
       window.destroy
       Gtk.main_quit
     end

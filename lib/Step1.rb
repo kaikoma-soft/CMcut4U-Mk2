@@ -86,19 +86,19 @@ class Step1
     end
 
     #  0,0    w
-    #   +-------+---+
-    #   |TL     |TR |
+    #   +-------+---+ TR
+    #   |TL     |   |
     #   |       +---+ h
     #   |           |
-    #   |BL      BR |
-    #   +-----------+
+    #   |BL         |
+    #   +-----------+ BR
     #
     
-    w2 = (w * 0.18).round(2)
+    w2 = (w * 0.25).round(2)
     h2 = (h * 0.2).round(2)
     case para.fpara.position
     when "top-right"
-      x2 = (w * 0.8).round(2)
+      x2 = (w * 0.75).round(2)
       y2 = 0
     when "top-left"
       x2 = 0

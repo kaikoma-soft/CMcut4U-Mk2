@@ -1,4 +1,13 @@
 
+ver 1.0.4           2022/01/09
+
+ * 改良 (主に Ubuntu 21.10 に update した影響 )
+   * mpv 0.33 から --input-file オプションが廃止され、その結果 mpv の
+     起動が出来なくなった。その為 --input-ipc-server を使用する方法に変更。
+   * python -> python2 なので、その対応
+   * FixGUI の位置を指定する定数 FixguiPosition を config.rb に導入
+       例: FixguiPosition = { x: 50, y: 100 }
+   
 ver 1.0.3           2021/04/01
 
   ・改良
