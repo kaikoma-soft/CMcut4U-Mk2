@@ -307,7 +307,7 @@ class Fixgui
   def openMpv( para, quit = false )
     return if para[:tspath] == nil
 
-    if quit == false and @var[:mpfp] == nil
+    if quit == false and @var[:fifo] == nil
       fn = para[:tspath]
 
       fifo = nil
@@ -316,7 +316,7 @@ class Fixgui
       end
       File.mkfifo( fifo )
       
-      cmd = Mpv_opt.dup + %W( --idle --input-file=#{fifo} ) 
+      cmd = Mpv_opt.dup + %W( --idle --input-ipc-server=#{fifo} ) 
       cmd << fn
       
       begin
@@ -325,10 +325,8 @@ class Fixgui
           Thread.current.report_on_exception = false 
           Process::waitpid( pid )
           statmesg( "mpv end" )
-          @var[:mpfp] = nil
           cleanUp()
         end
-        @var[:mpfp] = File.open( fifo,"w")
         @var[:fifo] = fifo
         $workFile << fifo
       rescue Errno::ENOENT => e
@@ -337,9 +335,8 @@ class Fixgui
         puts( msg )
       end
     else
-      mpsend("quit")
+      sendMsg("quit")
       statmesg( "mpv quit" )
-      sleep 1
     end
   end
 
@@ -399,12 +396,25 @@ class Fixgui
   end
   
 
+  #
+  #   socket にコマンド書き込み
+  #
+  def sendMsg( msg )
+    puts( msg )
+    if @var[:fifo] != nil
+      s = UNIXSocket.new( @var[:fifo] )
+      s.write(msg + "\n" )
+      s.close
+    else
+      statmesg( "Error: mpv not exec" )
+    end
+  end
 
 
   #
-  #  mpv にコマンド送信
+  #  mpv にコマンド送信(廃止)
   #
-  def mpsend( cmd )
+  def mpsend_old( cmd )
     if @var[:mpfp] != nil
       #puts( cmd )
       @var[:mpfp].puts( cmd )
@@ -424,7 +434,7 @@ class Fixgui
       sec = @var[:sdata][n][1].split[0].to_f - 1
       sec = 0 if sec < 0
       statmesg("seek #{sec.to_i} sec"  )
-      mpsend("seek #{sec.to_i} absolute\n")
+      sendMsg("seek #{sec.to_i} absolute\n")
     end
     
   end

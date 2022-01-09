@@ -8,11 +8,12 @@
 Top       = ENV["HOME"] + "/video"
 
 FFMPEG_BIN  = "/usr/bin/X11/ffmpeg"
-PYTHON_BIN  = "/usr/bin/python"
+PYTHON_BIN  = "/usr/bin/python2"
 
 NomalSize   = "1280x720"
 CMSize      = "640x360"
 ToMp4       = "to_mp4.sh"
+FixguiPosition = { x: 50, y: 100 }
 
 #
 #  mpv オプション

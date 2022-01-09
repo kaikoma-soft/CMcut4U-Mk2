@@ -10,7 +10,7 @@ require 'nkf'
 require 'yaml'
 require 'wav-file'
 
-Version = "1.0.0"
+Version = "1.0.1"
 WavRatio= 4410
 
 #
@@ -117,7 +117,7 @@ def  tssplit( input, sdata )
 
   ext = File.extname( input )
   output = File.basename( input,ext )
-  output.sub!(/#\d+[・\-] #\d+/,'')
+  output.sub!(/#\d+[・\-～][\s#]?\d+/,'')
   output.sub!(/\s+$/,'')
 
   count = $opt[:n]
@@ -231,7 +231,7 @@ def usage()
 Usage: #{pname} [Options]...  ts-file
 
   Options:
-    -t, --time n          分割する秒数
+    -t, --time n          分割する秒数(周期)
     -n, --num n           ナンバリングの開始番号
     -s, --skip n          先頭をずらす(秒)
     -S, --shift n         先頭以外の切り出し時間をずらす(秒)
@@ -244,6 +244,7 @@ Usage: #{pname} [Options]...  ts-file
         --tw n            無音期間の閾値の探索step値
     -e, --end             無音期間の切り出し方 終端
     -M, --mid             無音期間の切り出し方 真中
+    -C, --cp n,m,...      指定した秒数で切り出す
         --help            Show this help
 
 #{pname} ver #{Version}
@@ -270,6 +271,7 @@ $opt = {
   :tw  => 1.0,                  # 探索幅   (--sd1指定時)
   :c   => :end,                 # 切り出し方 (:mid = 真ん中、:end = 端 )
   :shift => 0.0,                # 切り出し時間をずらす(秒)
+  :cp  => nil,                  # cut point で指定
 }
 
 OptionParser.new do |opt|
@@ -287,6 +289,7 @@ OptionParser.new do |opt|
   opt.on('-e','--end')        { |v| $opt[:c] = :end }
   opt.on('-M','--mid')        { |v| $opt[:c] = :mid }
   opt.on('-S n','--shift n')  { |v| $opt[:shift] = v.to_f }
+  opt.on('--cp cutpoint')     { |v| $opt[:cp] = v }
   opt.on('--help')            { usage() }
   opt.parse!(ARGV)
 end
@@ -357,6 +360,29 @@ if wavfn != nil
       st = d - $opt[:m]
     end
   end
+elsif $opt[:cp] != nil
+  cutpoint = []
+  $opt[:cp].split(/,/).each do |v|
+    if v =~ /:/
+      cutpoint << hmd2sec( v )
+    else
+      cutpoint << v.to_i
+    end
+  end
+  
+  r = ffprobe( infile )
+  cutpoint << r[:duration2] 
+  
+  ptime = 0
+  cutpoint.each do |n|
+    sdata << [ ptime, ( n - ptime ) ]
+    if ptime > n
+      puts("Error: 切り出し点が昇順ではありません。#{cutpoint.to_s}")
+      exit
+    end
+    ptime = n
+  end
+
 else
   r = ffprobe( infile )
   dra = r[:duration2] 
