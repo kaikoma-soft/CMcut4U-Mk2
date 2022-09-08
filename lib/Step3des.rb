@@ -29,7 +29,7 @@ class Step3des < Array
 
   def load(para)
     if FileTest.size?(para.step3desfn) != nil
-      data = YAML.load_file( para.step3desfn )
+      data = YamlWrap.load_file( para.step3desfn )
       return data
     end
     return nil

@@ -117,6 +117,7 @@ def  tssplit( input, sdata )
 
   ext = File.extname( input )
   output = File.basename( input,ext )
+  output.sub!(/([・\-～])\s+/,'\1')
   output.sub!(/#\d+[・\-～][\s#]?\d+/,'')
   output.sub!(/\s+$/,'')
 
@@ -334,7 +335,7 @@ if wavfn != nil
 
   yamlfn = wavfn.sub(/\.wav$/,'.yaml')
   if test(?f, yamlfn )
-    data = YAML.load_file( yamlfn )
+    data = YamlWrap.load_file( yamlfn )
   else
     data = wavAnalysis( wavfn: wavfn, wavratio: wav[:ratio], th: 1.0 )
     File.open( yamlfn,"w") do |fp|

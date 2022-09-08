@@ -733,10 +733,10 @@ class Step3
     dbfnC = "#{para.cached}/resultC.yaml"
     if $opt.noCache == false
       if test(?f,dbfnH ) == true
-        data1 = YAML.load_file( dbfnH )
+        data1 = YamlWrap.load_file( dbfnH )
       end
       if test(?f,dbfnC ) == true
-        data2 = YAML.load_file( dbfnC )
+        data2 = YamlWrap.load_file( dbfnC )
       end
       if data1 != nil and data1.size > 2
         log("logoDetection() use cache data")
