@@ -31,6 +31,7 @@ require_relative 'Step3des.rb'
 require_relative 'Result.rb'
 require_relative 'ConvSubTT'
 require_relative 'Macro.rb'
+require_relative 'YamlWrap.rb'
 
 if Array.method_defined?(:sum) == false
   require_relative 'ArraySum.rb'

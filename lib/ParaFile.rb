@@ -73,7 +73,7 @@ class ParaFile
     parafn = para != nil ? para.parafn : fn
 
     if test( ?f, parafn )
-      lt = YAML.load_file( parafn )
+      lt = YamlWrap.load_file( parafn )
       return lt.initPara()
     end
     #log("パラメータファイルが見つかりませんでした。")

@@ -223,7 +223,7 @@ class Step2
       cachefn = para.cached + "/sceneC.yaml"
       if $opt.noCache == false
         if FileTest.size?( cachefn ) != nil
-          data = YAML.load_file( cachefn )
+          data = YamlWrap.load_file( cachefn )
           if data != nil and data.size > 2
             return data
           end
@@ -259,7 +259,7 @@ class Step2
       cachefn = para.cached + "/wav.yaml"
       if $opt.noCache == false
         if FileTest.size?( cachefn ) != nil
-          data = YAML.load_file( cachefn )
+          data = YamlWrap.load_file( cachefn )
           if data != nil and data.size > 2
             return data
           end
