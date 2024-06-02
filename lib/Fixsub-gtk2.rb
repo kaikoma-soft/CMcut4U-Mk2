@@ -19,13 +19,10 @@ class Fixgui
   #
   def setTitle( tbl )
     title = %w( チャプターNo 時間(秒) 時間(HMS) 幅(秒) 種別 コメント 種別修正)
-    #arg = [ Gtk::EXPAND,Gtk::FILL, 1, 1 ]
+    arg = [ Gtk::EXPAND,Gtk::FILL, 1, 1 ]
     title.each_with_index do |str,j|
       label = Gtk::Label.new( str )
-      eventbox = Gtk::EventBox.new.add(label)
-      eventbox.override_background_color( :normal, @color[:gray2] )
-      eventbox.set_border_width(1)
-      tbl.attach( eventbox, j, 0, 1, 1 ) # for Grid
+      tbl.attach( label, j, j+1, 0, 1, *arg ) #, *@tblarg 
     end
   end
 
@@ -41,13 +38,10 @@ class Fixgui
       buf << sprintf("%4s : %s",s.key, s.des)
     end
     label = Gtk::Label.new( buf.join("\n"))
-    label.set_justify( :left )
-    vbox1 = Gtk::Box.new(:vertical, 0 )
-    vbox1.pack_start(label, :expand => true, :fill => true, :padding => 20)
-
-    d.child.add(vbox1) 
+    label.set_justify(Gtk::JUSTIFY_LEFT)
+    label.show
+    d.vbox.pack_start(label, true, true, 10)
     d.add_buttons(["Close", 1])
-    d.show_all
     d.run
     d.destroy
   end
@@ -84,13 +78,8 @@ class Fixgui
       sdata2 << [ chap, time, hms, dis,type, comme, fix ]
     end
 
-    tbl = Gtk::Grid.new
-    tbl.row_spacing    = 0
-    tbl.column_spacing = 0
-    tbl.margin_top     = 10
-    tbl.margin_bottom  = 10
-    tbl.set_hexpand( true )
-    @var[:tablee].remove( @var[:table] ) if @var[:tablee] != nil
+    tbl = Gtk::Table.new(5, data.size + 1, false)
+    @var[:tablee].remove( @var[:table] )
     @var[:tablee].add(tbl)
     @var[:table] = tbl
 
@@ -99,9 +88,9 @@ class Fixgui
     #
     menu = Gtk::Menu.new
     menuItem = []
-    menuItem[0] = Gtk::MenuItem.new( :label => typeStr(0) )
-    menuItem[1] = Gtk::MenuItem.new( :label => typeStr(1) )
-    menuItem[2] = Gtk::MenuItem.new( :label => typeStr(2) )
+    menuItem[0] = Gtk::MenuItem.new( typeStr(0) )
+    menuItem[1] = Gtk::MenuItem.new( typeStr(1) )
+    menuItem[2] = Gtk::MenuItem.new( typeStr(2) )
     menuItem.each_with_index do |mi,i|
       menu.append mi
       mi.signal_connect('activate') do |widget, event|
@@ -128,6 +117,7 @@ class Fixgui
         end
       end
     end
+
 
     # チャプター数：計算値
     if @var[:cc] != nil
@@ -172,11 +162,9 @@ class Fixgui
     setTitle( tbl )
     @newFix = []
     sdata2.each_with_index do |a,i|
-      style = @color[:green]
-      style = @color[:red] if a[4] =~ /CM/
+      style = @style[:bg]
+      style = @style[:br] if a[4] =~ /CM/
 
-      eventbox = nil
-      chap = a[0]
       a.each_with_index do |str,j|
         next if j == 7
         if j == 6
@@ -184,24 +172,19 @@ class Fixgui
         else
           label = Gtk::Label.new( str.to_s )
         end
-        label.set_justify( :left )
-        label.set_hexpand( true )
-
+        label.set_justify(Gtk::JUSTIFY_LEFT)
         eventbox = Gtk::EventBox.new.add(label)
-        eventbox.set_border_width(1)
-        #eventbox.style = style
-        eventbox.override_background_color( :normal, style )
-        
-        if j < 5                  # mpv seek
-          eventbox.events = :button_press_mask
+        eventbox.style = style
+        if j < 4                  # mpv seek
+          eventbox.events = Gdk::Event::BUTTON_PRESS_MASK
           eventbox.signal_connect("button_press_event") {seekMpv(i)}
         elsif j == 5        # step3des
-          eventbox.events = :button_press_mask
+          eventbox.events = Gdk::Event::BUTTON_PRESS_MASK
           eventbox.signal_connect("button_press_event") do |widget, event|
             step3des()
           end
         elsif j == 6        # fix popup
-          eventbox.events = :button_press_mask
+          eventbox.events = Gdk::Event::BUTTON_PRESS_MASK
           eventbox.signal_connect("button_press_event") do |widget, event|
             @var[:row] = i
             menu.popup nil, nil, event.button, event.time
@@ -209,12 +192,12 @@ class Fixgui
           @newFix << { label: label, time: a[7] }
         end
         if j == 0
-          if chapSpan[chap][:start] == i 
-            k = chapSpan[chap][:end] - chapSpan[chap][:start] + 1
-            tbl.attach( eventbox, j, i+1, 1, k )
+          if chapSpan[str][:start] == i
+            k = i + 2 + ( chapSpan[str][:end] - chapSpan[str][:start] )
+            tbl.attach( eventbox, j, j+1, i+1, k, *@tblarg )
           end
         else
-          tbl.attach( eventbox, j, i+1, 1, 1 )
+          tbl.attach( eventbox, j, j+1, i+1, i+2, *@tblarg )
         end
       end
     end
@@ -241,20 +224,13 @@ class Fixgui
 
     if @para != nil
       # ダイアログの表示
-      d = Gtk::Dialog.new( :title => "-",
-                           :parent => parent,
-                           :flags => [:modal ],
-                           :buttons => nil)
-      
+      d = Gtk::Dialog.new( nil, parent, Gtk::Dialog::MODAL)
       label = Gtk::Label.new("  ***  計算中  ***  ")
-      vbox = Gtk::Box.new(:vertical, 0 )
-      vbox.pack_start(label, :expand => true, :fill => true, :padding => 30)
-      d.child.add( vbox )
+      d.vbox.pack_start(label, true, true, 30)
       d.show_all
       statmesg( "計算中" )
       
       t = Thread.new do           # 待機スレッド
-        sleep(0.2)
         t1 = Time.now
         @para.readParaFile( )
         @para.readMacroFile()
@@ -267,7 +243,7 @@ class Fixgui
         sleep( tw ) if tw > 0                        # 最低表示期間
         d.destroy
       end
-      gtkEventProc() while t.join( 0.01 ) == nil
+      gtkEventProc() while t.join( 0.1 ) == nil
       statmesg( "計算終了" )
     end
   end

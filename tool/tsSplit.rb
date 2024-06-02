@@ -9,9 +9,11 @@ require 'optparse'
 require 'nkf'
 require 'yaml'
 require 'wav-file'
+require_relative '../lib/require.rb'
 
-Version = "1.0.1"
-WavRatio= 4410
+
+TsSplit_Ver = "1.0.2"
+#WavRatio= 4410
 
 #
 #   無音期間の抽出
@@ -248,7 +250,7 @@ Usage: #{pname} [Options]...  ts-file
     -C, --cp n,m,...      指定した秒数で切り出す
         --help            Show this help
 
-#{pname} ver #{Version}
+#{pname} ver #{TsSplit_Ver}
 EOM
     print usageStr
     exit 1
@@ -296,10 +298,12 @@ OptionParser.new do |opt|
 end
 
 
-infile = ARGV.first
 wav = nil
+if ( infile = ARGV.first ) == nil
+  usage()
+end
 
-unless test(?f, infile )
+unless test( ?f, infile )
   printf("file not found %s\n",infile )
   exit
 end

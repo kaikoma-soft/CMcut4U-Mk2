@@ -130,7 +130,7 @@ while n < len(files):
                     if os.path.exists(fname) == False: break
                     
                 cv.imwrite( fname, img_v)
-                print "save {0}".format( fname )
+                print( "save {0}".format( fname ))
             elif ( key == 106 ): # j
                 n += 60
             elif ( key == 98 ): # b

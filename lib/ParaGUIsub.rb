@@ -71,7 +71,7 @@ class ParaGUI
     ws[:clf].set_active(-1)
     ws[:rmlogo].set_active(-1)
     ws[:lp_tr].active = true
-    10.times.each do |n|
+    DuraN.times.each do |n|
       ws[:cs][n].set_text("")
       ws[:dr][n].set_text("")
     end
@@ -288,7 +288,7 @@ class ParaGUI
 
     @fpara.chapNum = []
     @fpara.duration = []
-    10.times.each do |n|
+    DuraN.times.each do |n|
       tmp = ws[:cs][n].text.strip.to_i
       @fpara.chapNum << tmp if tmp != nil and tmp > 0
       tmp = ws[:dr][n].text.strip.to_i
