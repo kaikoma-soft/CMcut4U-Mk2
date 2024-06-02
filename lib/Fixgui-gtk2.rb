@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 # -*- coding: utf-8 -*-
 
-require 'gtk3'
+require 'gtk2'
 
 
 class Fixgui
@@ -21,13 +21,6 @@ class Fixgui
     else
       @var[ :tspath ] = path
     end
-  end
-
-  def set_margin( w, t, r, b , l )
-    w.set_margin_top( t )
-    w.set_margin_left( l )
-    w.set_margin_right( r )
-    w.set_margin_bottom( b )
   end
   
   def initialize( para = nil )
@@ -49,7 +42,7 @@ class Fixgui
     #
     # 前準備
     #
-    tsFiles = listTSdir( $opt.indir ) 
+    tsFiles = listTSdir( $opt.indir )
     dirs = tsFiles.keys.sort
     #Signal.trap( :INT ) { cleanUp(); exit() }
 
@@ -63,25 +56,23 @@ class Fixgui
     window.signal_connect("destroy"){ cleanUp(); Gtk.main_quit  }
     
     # vbox1
-    vbox1 = Gtk::Box.new(:vertical, 5) 
+    vbox1 = Gtk::VBox.new(false, 5)
     window.add(vbox1)
     dummy = Gtk::Label.new("")
-    vbox1.pack_start(dummy, :expand => false, :fill => false, :padding => 2)
+    vbox1.pack_start(dummy, false, false, 0)
 
     #
     #  TSファイル選択
     # 
-    tmp = frame1 = Gtk::Frame.new("対象TSファイル")
-    set_margin( tmp, 1, 5, 0, 5 )
-    vbox1.pack_start(frame1, :expand => false, :fill => false, :padding => 5)
+    frame1 = Gtk::Frame.new("対象TSファイル")
+    vbox1.pack_start(frame1, false, false, 0)
 
     # vbox2
-    tmp = vbox2 = Gtk::Box.new(:vertical, 5) 
-    set_margin( tmp, 1, 5, 5 , 5 )
+    vbox2 = Gtk::VBox.new(false, 5)
     frame1.add(vbox2)
 
     # dir 選択
-    cb1 = Gtk::ComboBoxText.new
+    cb1 = Gtk::ComboBox.new
     n = ( dirs.size / 25 ).to_i + 1
     cb1.wrap_width = n
     dirIindex = nil
@@ -95,14 +86,15 @@ class Fixgui
     vbox2.add(cb1)
 
     # TS ファイル選択
-    cb2 = Gtk::ComboBoxText.new
+    cb2 = Gtk::ComboBox.new
     vbox2.add(cb2)
+
     
     cb1.signal_connect("changed") do |widget|
       dir = widget.active_text
       @var[ :dir ] = dir
       if tsFiles[ dir ] != nil
-        @var[ :cb2Count ].times { cb2.remove(0) }
+        @var[ :cb2Count ].times { cb2.remove_text(0) }
         n = 0
         tsFiles[ dir ].each do |file|
           cb2.append_text( file )
@@ -120,32 +112,32 @@ class Fixgui
       end
     end
 
-    hbox2 = Gtk::Box.new(:horizontal, 10)
-    vbox1.pack_start(hbox2, :expand => false, :fill => false, :padding => 5)
+    hbox2 = Gtk::HBox.new(false, 10)
+    vbox1.pack_start(hbox2, false, false, 10)
 
     #
     #  コマンドボタン
     #
-    bon1 = Gtk::Button.new( :label => "計算")
-    hbox2.pack_start(bon1, :expand => false, :fill => false, :padding => 5)
+    bon1 = Gtk::Button.new("計算")
+    hbox2.pack_start(bon1, false, false, 5)
     bon1.signal_connect("clicked") do
       calc( @var, window ) if @para != nil
     end
 
-    bon2 = Gtk::Button.new( :label => "mpv 起動/終了")
-    hbox2.pack_start(bon2, :expand => false, :fill => true, :padding => 5)
+    bon2 = Gtk::Button.new("mpv 起動/終了")
+    hbox2.pack_start(bon2, false, true, 5)
     bon2.signal_connect("clicked") do
       openMpv( @var ) if @para != nil
     end
 
-    bon7 = Gtk::Button.new( :label => "変更書き込み")
-    hbox2.pack_start(bon7, :expand => false, :fill => false, :padding => 5)
+    bon7 = Gtk::Button.new("変更書き込み")
+    hbox2.pack_start(bon7, false, false, 5)
     bon7.signal_connect("clicked") do
       writeFix( window ) if @para != nil
     end
     
-    bon6 = Gtk::Button.new( :label => "現在の計算値を期待値として追加")
-    hbox2.pack_start(bon6, :expand => false, :fill => false, :padding => 5)
+    bon6 = Gtk::Button.new("現在の計算値を期待値として追加")
+    hbox2.pack_start(bon6, false, true, 5)
     bon6.signal_connect("clicked") do
       addPara( window  ) if @para != nil
     end
@@ -162,15 +154,15 @@ class Fixgui
     #   encode( @var )
     # end
 
-    bon5 = Gtk::Button.new( :label => "パラメータ設定")
-    hbox2.pack_start(bon5, :expand => false, :fill => false, :padding => 5)
+    bon5 = Gtk::Button.new("パラメータ設定")
+    hbox2.pack_start(bon5, false, true, 5)
     bon5.signal_connect("clicked") do
       execLTE( @var )
     end
 
 
-    bon4 = Gtk::Button.new( :label => "終了")
-    hbox2.pack_start(bon4, :expand => false, :fill => false, :padding => 5)
+    bon4 = Gtk::Button.new("終了")
+    hbox2.pack_start(bon4, false, true, 5)
     bon4.signal_connect("clicked") do
       openMpv( @var, true )
       cleanUp()
@@ -181,87 +173,89 @@ class Fixgui
     #
     #  表
     #
-
-    # 16進で color 指定
-    def get_hex_color( r,g,b )
-      return Gdk::RGBA::new( r.to_f / 0xffff,  g.to_f / 0xffff, b.to_f / 0xffff,  1.0)
-    end
-    
-    @color = {        
-      :red     => get_hex_color( 0xffff, 0xe000, 0xe000 ),
-      :white   => get_hex_color( 0xffff, 0xffff, 0xffff ),
-      :gray    => get_hex_color( 0xb000, 0xb000, 0xb000 ),
-      :gray2   => get_hex_color( 0xac00, 0xac00, 0xac00 ),
-      :green   => get_hex_color( 0xe000, 0xffff, 0xe000 )
+    @style = {
+      :bw => Gtk::Style.new.
+               set_fg(Gtk::STATE_NORMAL, 0, 0, 0).
+               set_bg(Gtk::STATE_NORMAL, 0xffff, 0xffff,0xffff),
+      :br => Gtk::Style.new.
+               set_fg(Gtk::STATE_NORMAL, 0, 0, 0).
+               set_bg(Gtk::STATE_NORMAL, 0xffff, 0xe000,0xe000),
+      :bg => Gtk::Style.new.
+               set_fg(Gtk::STATE_NORMAL, 0, 0, 0).
+               set_bg(Gtk::STATE_NORMAL, 0xe000, 0xffff,0xe000),
+      :gg => Gtk::Style.new.
+               set_fg(Gtk::STATE_NORMAL, 0xb000, 0xb000, 0xb000).
+               set_bg(Gtk::STATE_NORMAL, 0xb000, 0xb000, 0xb000),
     }
-    
-    sw = Gtk::ScrolledWindow.new
-    sw.shadow_type = :none
-    sw.set_policy(:automatic,:automatic)
 
-    tbl = Gtk::Grid.new
-    tbl.row_spacing    = 0
-    tbl.column_spacing = 0
-    tbl.margin_top     = 10
-    tbl.margin_bottom  = 10
-    tbl.set_vexpand( true )
-    tbl.set_hexpand( true )
-    
+
+    sw = Gtk::ScrolledWindow.new(nil, nil)
+    sw.shadow_type = Gtk::SHADOW_ETCHED_IN
+    sw.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC )
+    sw.set_style(@style[:bw])
+    vbox1.add(sw)
+
+    tbl = Gtk::Table.new(2, 30, false)
     tble = Gtk::EventBox.new.add(tbl)
+    tble.style = @style[:gg]
+
     @var[:table] = tbl
     @var[:tablee] = tble
     @var[:sw] = sw
+    @tblarg = [ Gtk::FILL,Gtk::FILL, 1, 1 ]
 
-    vbox1.pack_start( sw, :expand => true, :fill => true, :padding => 0)
-    
     #
     #  空状態の表作成
     # 
     setTitle( tbl )
+    arg = [ Gtk::FILL,Gtk::FILL, 1, 1 ]
     0.upto(6).each do |r|
       1.upto(30).each do |c|
         if c % 2 > 0
-          bgc = @color[:green]
+          style = @style[:bg]
         else
-          bgc = @color[:red]
+          style = @style[:br]
         end
-        label = Gtk::Label.new( sprintf("%d-%d",r,c) )
+        label = Gtk::Label.new( "" ) # sprintf("%d-%d",r,c)
         eventbox = Gtk::EventBox.new.add(label)
-        eventbox.set_border_width(1)
-        eventbox.set_hexpand( true )
-        
-        label.override_background_color( :normal, bgc )
-        tbl.attach( eventbox, r, c, 1, 1 ) # for grid
+        eventbox.style = style
+        tbl.attach( eventbox, r, r+1, c, c+1, *@tblarg )
       end
     end
 
     sw.add_with_viewport(tble)
 
+
     #
     #  期待値と計算値
     #
-    tbl = Gtk::Grid.new()
-    tbl.row_spacing    = 5
-    tbl.column_spacing = 15
+    arg = [ Gtk::FILL,Gtk::FILL, 8, 2 ]
+    tbl = Gtk::Table.new(2, 3, false)
+    label = Gtk::Label.new("期待値")
+    tbl.attach( label, 1, 2, 0, 1, *arg )
+    label = Gtk::Label.new("計算値")
+    tbl.attach( label, 2, 3, 0, 1, *arg )
+    label = Gtk::Label.new("結果")
+    tbl.attach( label, 3, 4, 0, 1, *arg )
+    label = Gtk::Label.new("チャプター")
+    tbl.attach( label, 0, 1, 1, 2, *arg )
+    label = Gtk::Label.new("時間")
+    tbl.attach( label, 0, 1, 2, 3, *arg )
+    @var[:ce] = Gtk::Label.new("-") # チャプター・期待値
+    tbl.attach( @var[:ce], 1, 2, 1, 2, *arg )
+    @var[:de] = Gtk::Label.new("-") # 時間・期待値
+    tbl.attach( @var[:de], 1, 2, 2, 3, *arg )
+    @var[:cc] = Gtk::Label.new("-") # チャプター・計算値
+    tbl.attach( @var[:cc], 2, 3, 1, 2, *arg )
+    @var[:dc] = Gtk::Label.new("-") # 時間・計算値
+    tbl.attach( @var[:dc], 2, 3, 2, 3, *arg )
+    @var[:cr] = Gtk::Label.new("-") # チャプター・結果
+    tbl.attach( @var[:cr], 3, 4, 1, 2, *arg )
+    @var[:dr] = Gtk::Label.new("-") # 時間・結果
+    tbl.attach( @var[:dr], 3, 4, 2, 3, *arg )
 
-    def grid_add_label( tbl, left, top, str )
-      label = Gtk::Label.new( str )
-      tbl.attach( label, left, top, 1, 1 )
-      return label
-    end
-    grid_add_label( tbl, 1, 0, "期待値" )
-    grid_add_label( tbl, 2, 0, "計算値" )
-    grid_add_label( tbl, 3, 0, "結果" )
-    grid_add_label( tbl, 0, 1, "チャプター" )
-    grid_add_label( tbl, 0, 2, "時間" )
-    @var[:ce] = grid_add_label( tbl, 1, 1, "-" ) # チャプター・期待値
-    @var[:cc] = grid_add_label( tbl, 2, 1, "-" ) # チャプター・計算値
-    @var[:cr] = grid_add_label( tbl, 3, 1, "-" ) # チャプター・結果
-    @var[:de] = grid_add_label( tbl, 1, 2, "-" ) # 時間・期待値
-    @var[:dc] = grid_add_label( tbl, 2, 2, "-" ) # 時間・計算値
-    @var[:dr] = grid_add_label( tbl, 3, 2, "-" ) # 時間・結果
-    
-    vbox1.pack_start(tbl, :expand => false, :fill => false, :padding => 10)
+    vbox1.pack_start(tbl, false, false, 10)
+
 
     #
     #  --ngfix で呼ばれた時の処理
@@ -274,11 +268,8 @@ class Fixgui
       readChap(@var, window )
     end
 
-    hsep = Gtk::Separator.new(:horizontal)
-    vbox1.pack_start(hsep, :expand => false, :fill => true, :padding => 1)
-    
     @status_bar = Gtk::Statusbar.new
-    vbox1.pack_start(@status_bar, :expand => false, :fill => true, :padding => 1)
+    vbox1.pack_start(@status_bar, false, true, 5)
 
     window.show_all
     window.move( @opt[:x],@opt[:y] )
@@ -288,5 +279,3 @@ class Fixgui
   end
   
 end
-
-
