@@ -149,7 +149,7 @@ class Step5
       end
 
       ss = sprintf("%.3f",c.t)
-      w  = sprintf("%.3f",c.w)
+      w  = sprintf("%.3f",c.w || 0.0 )  # c.w が nil の場合は 0.0 に設定
       metaf = outf.sub(/\.mp4/,".ini").sub(/\/tmp/,"/meta-tmp")
       infn = FileTest.size?( @para.psfn ) != nil ? @para.psfn : @para.tsfn
       env = { :OUTPUT   =>  outf,

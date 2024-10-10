@@ -43,7 +43,7 @@
 
 * Ubuntu 18.04.1 LTS (多分Unix系ならなんでも)
 * ruby  2.5.1 以上 
-* ruby-gtk2 3.2.4
+* ruby-gtk3 3.5.1 以上 
 * ruby-wave
 * python 2.7 以上
 * Opencv 3.4.1
